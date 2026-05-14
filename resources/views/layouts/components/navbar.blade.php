@@ -73,7 +73,7 @@
         </div>
 
         {{-- Right Actions --}}
-        <div class="flex items-center gap-2">
+        <div class="hidden md:flex items-center gap-2">
             <button class="p-2 text-content-tertiary hover:text-content-primary transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

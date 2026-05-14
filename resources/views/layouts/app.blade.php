@@ -7,21 +7,23 @@
     <title>@yield('title', 'Dashboard') — Protika WiFi</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="antialiased selection:bg-primary/20 selection:text-primary-deep" x-data="{ userMenuOpen: false, masterMenuOpen: false, tagihanMenuOpen: false }">
+<body class="antialiased selection:bg-primary/20 selection:text-primary-deep" x-data="{ userMenuOpen: false, masterMenuOpen: false, tagihanMenuOpen: false, mobileMenuOpen: false }">
 
     {{-- Main Navigation Bar --}}
     @include('layouts.components.navbar')
 
     {{-- Main Content --}}
-    <main class="max-w-[1440px] mx-auto px-8 py-8 min-h-[calc(100vh-80px)]">
+    <main class="max-w-[1440px] mx-auto px-4 md:px-8 py-6 md:py-8 min-h-[calc(100vh-80px)] pb-24 md:pb-8">
         {{-- Header Section --}}
-        <div class="mb-8 flex items-end justify-between">
+        <div class="mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-semibold text-content-primary tracking-tight">@yield('page-title', 'Dashboard')</h1>
-                <p class="text-content-secondary mt-1">@yield('page-subtitle', 'Welcome back, ' . auth()->user()->name)</p>
+                <h1 class="text-2xl md:text-3xl font-semibold text-content-primary tracking-tight">@yield('page-title', 'Dashboard')</h1>
+                <p class="text-content-secondary mt-1 text-sm md:text-base">@yield('page-subtitle', 'Welcome back, ' . auth()->user()->name)</p>
             </div>
             
-            @yield('header-actions')
+            <div class="flex items-center gap-2">
+                @yield('header-actions')
+            </div>
         </div>
 
         {{-- Flash Messages --}}
@@ -29,6 +31,9 @@
 
         @yield('content')
     </main>
+
+    {{-- Mobile Bottom Navigation --}}
+    @include('layouts.components.bottom-navbar')
 
     @stack('scripts')
 </body>
