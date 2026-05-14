@@ -1,0 +1,157 @@
+<?php
+
+namespace App\Http\Controllers\Tagihan;
+
+use App\Http\Controllers\Controller;
+use App\Models\Tagihan;
+use App\Models\MasterPelanggan;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
+
+class TagihanController extends Controller
+{
+    public function index(Request $request)
+    {
+        $now   = Carbon::now();
+        $bulan = $request->bulan ?? $now->month;
+        $tahun = $request->tahun ?? $now->year;
+
+        $query = Tagihan::with(['pelanggan.bulanan', 'pelanggan', 'kolektor']);
+
+        if (auth()->user()->hasRole('kolektor')) {
+            $query->where('kolektor_id', auth()->user()->kolektor_id);
+        }
+
+        // Generate tagihan otomatis yang belum ada untuk pelanggan aktif
+        $this->generateTagihanBulanIni($now, auth()->user());
+
+        $query->when($bulan,              fn($q, $v) => $q->where('bulan',  $v))
+              ->when($tahun,              fn($q, $v) => $q->where('tahun',  $v))
+              ->when($request->status,   fn($q, $v) => $q->where('status', $v))
+              ->when($request->search,   fn($q, $v) => $q->whereHas('pelanggan', fn($p) => $p->where('nama_pelanggan', 'like', "%$v%")));
+
+        $tagihan = $query->latest()->paginate(20)->withQueryString();
+
+        // Hitung tunggakan (tagihan belum lunas/sebagian dari bulan-bulan sebelumnya)
+        $tunggakanQuery = Tagihan::with('pelanggan')
+            ->whereIn('status', ['belum_lunas', 'sebagian'])
+            ->where(function ($q) use ($now) {
+                $q->where('tahun', '<', $now->year)
+                  ->orWhere(function ($q2) use ($now) {
+                      $q2->where('tahun', $now->year)->where('bulan', '<', $now->month);
+                  });
+            });
+
+        if (auth()->user()->hasRole('kolektor')) {
+            $tunggakanQuery->where('kolektor_id', auth()->user()->kolektor_id);
+        }
+
+        $totalTunggakan = $tunggakanQuery->count();
+
+        return view('tagihan.index', compact('tagihan', 'bulan', 'tahun', 'totalTunggakan'));
+    }
+
+    public function create()
+    {
+        // Redirect ke index — tagihan dibuat otomatis
+        return redirect()->route('tagihan.index');
+    }
+
+    public function store(Request $request)
+    {
+        // Tidak digunakan lagi — tagihan dibuat otomatis
+        return redirect()->route('tagihan.index')->with('info', 'Tagihan dibuat otomatis setiap bulan.');
+    }
+
+    public function edit(Tagihan $tagihan)
+    {
+        return view('tagihan.edit', compact('tagihan'));
+    }
+
+    /**
+     * Kolektor hanya bisa update: status, nominal_bayar, tanggal_bayar, keterangan.
+     * Aturan sebagian: nominal_bayar harus < sisa tagihan dan > 0.
+     */
+    public function update(Request $request, Tagihan $tagihan)
+    {
+        $rules = [
+            'status'       => 'required|in:lunas,belum_lunas,sebagian',
+            'tanggal_bayar'=> 'nullable|date',
+            'keterangan'   => 'nullable|string|max:500',
+        ];
+
+        $sisa = $tagihan->sisa_tagihan;
+
+        // Nominal bayar hanya wajib jika lunas atau sebagian
+        if (in_array($request->status, ['lunas', 'sebagian'])) {
+            $rules['nominal_bayar'] = 'required|numeric|min:1';
+
+            // Jika sebagian: harus lebih kecil dari SISA tagihan
+            if ($request->status === 'sebagian') {
+                $rules['nominal_bayar'] = 'required|numeric|min:1|lt:' . $sisa;
+            }
+        }
+
+        $validated = $request->validate($rules);
+
+        $updateData = [
+            'status'        => $validated['status'],
+            'tanggal_bayar' => $validated['tanggal_bayar'] ?? null,
+            'keterangan'    => $validated['keterangan'] ?? null,
+        ];
+
+        // Hitung total terbayar baru
+        if (isset($validated['nominal_bayar']) && in_array($validated['status'], ['lunas', 'sebagian'])) {
+            // Jika status lunas dari modal otomatis kirim nominal sisa tagihan
+            $updateData['terbayar'] = $tagihan->terbayar + $validated['nominal_bayar'];
+            
+            // Safety check: jika lunas, pastikan terbayar penuh
+            if ($validated['status'] === 'lunas') {
+                $updateData['terbayar'] = $tagihan->nominal;
+            }
+        } elseif ($validated['status'] === 'belum_lunas') {
+            // Jika diubah jadi belum lunas (reset)
+            $updateData['terbayar'] = 0;
+        }
+
+        $tagihan->update($updateData);
+
+        return redirect()->route('tagihan.index')->with('success', 'Status tagihan berhasil diperbarui.');
+    }
+
+    public function destroy(Tagihan $tagihan)
+    {
+        // Hanya superadmin
+        $tagihan->delete();
+        return redirect()->route('tagihan.index')->with('success', 'Tagihan berhasil dihapus.');
+    }
+
+    // -----------------------------------------------------------------------
+    // Auto-generate tagihan untuk semua pelanggan aktif di bulan berjalan
+    // -----------------------------------------------------------------------
+    private function generateTagihanBulanIni(Carbon $now, $user): void
+    {
+        $bulan = $now->month;
+        $tahun = $now->year;
+
+        $query = MasterPelanggan::with('bulanan')->whereNotNull('kolektor_id');
+
+        if ($user->hasRole('kolektor')) {
+            $query->where('kolektor_id', $user->kolektor_id);
+        }
+
+        $pelangganList = $query->get();
+
+        foreach ($pelangganList as $pelanggan) {
+            Tagihan::firstOrCreate(
+                ['pelanggan_id' => $pelanggan->id, 'bulan' => $bulan, 'tahun' => $tahun],
+                [
+                    'kolektor_id' => $pelanggan->kolektor_id,
+                    'nominal'     => $pelanggan->bulanan?->nominal ?? 0,
+                    'status'      => 'belum_lunas',
+                    'created_by'  => $user->id,
+                ]
+            );
+        }
+    }
+}

@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background: linear-gradient(135deg, #F0F4FF 0%, #EFF6FF 100%);
+    color: #1E293B;
+    font-family: 'Inter', 'Manrope', sans-serif;
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white/90 backdrop-blur-md border border-border rounded-lg shadow-card transition-all duration-200;
+  }
+  
+  .card:hover {
+    @apply -translate-y-0.5 shadow-card-hover;
+  }
+
+  .card-dark {
+    background: linear-gradient(145deg, #1E3A8A, #1D4ED8);
+    color: #FFFFFF;
+    @apply rounded-xl border-none shadow-none;
+  }
+
+  .nav-active {
+    @apply bg-primary text-white rounded-full px-4 py-1.5 font-medium shadow-card-sm;
+  }
+  
+  .nav-item {
+    @apply text-content-secondary hover:text-content-primary hover:bg-primary/5 rounded-full px-4 py-1.5 font-medium transition-colors;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-md font-semibold transition-all shadow-card-sm active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-border hover:bg-base-input text-content-primary rounded-md font-semibold transition-all shadow-sm active:scale-95;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-status-danger hover:bg-red-600 text-white rounded-md font-semibold transition-all shadow-sm active:scale-95;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2.5 bg-base-input border border-border rounded-md text-content-primary focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-content-tertiary;
+  }
+}
+
+@layer utilities {
+  .text-title {
+    @apply text-[16px] font-semibold text-content-primary;
+  }
+  
+  .text-label {
+    @apply text-[12px] font-medium text-content-secondary;
+  }
+  
+  .text-stat {
+    @apply text-[40px] font-bold text-content-primary tracking-tight;
+  }
+}
