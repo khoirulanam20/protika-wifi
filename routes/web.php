@@ -10,6 +10,7 @@ use App\Http\Controllers\Master\PenagihController;
 use App\Http\Controllers\Master\UserController;
 use App\Http\Controllers\Tagihan\TagihanController;
 use App\Http\Controllers\Tagihan\RekapController;
+use App\Http\Controllers\ProfileController;
 
 Route::get('/', fn() => redirect()->route('login'));
 
@@ -17,6 +18,12 @@ require __DIR__ . '/auth.php';
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Profile Routes
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
 
     Route::middleware(['role:superadmin|kolektor'])->prefix('master')->name('master.')->group(function () {
         Route::resource('pelanggan',  PelangganController::class);
