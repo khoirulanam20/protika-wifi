@@ -13,6 +13,10 @@
                     map: null,
                     marker: null,
                     lokasi: config.initialValue || '',
+                    searchQuery: '',
+                    isSearching: false,
+                    searchResults: [],
+                    showDropdown: false,
                     defaultLat: -7.3195, // Tengah Jawa Tengah / Temanggung default
                     defaultLng: 110.1770,
 
@@ -103,6 +107,38 @@
                         // Default if empty
                         this.marker.setLatLng([this.defaultLat, this.defaultLng]);
                         this.map.setView([this.defaultLat, this.defaultLng], 13);
+                    },
+
+                    async searchLocation() {
+                        if (!this.searchQuery.trim()) return;
+                        this.isSearching = true;
+                        this.showDropdown = false;
+                        try {
+                            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.searchQuery)}`);
+                            const data = await res.json();
+                            if (data && data.length > 0) {
+                                this.searchResults = data;
+                                this.showDropdown = true;
+                            } else {
+                                alert('Lokasi tidak ditemukan. Coba kata kunci yang lebih spesifik.');
+                                this.searchResults = [];
+                            }
+                        } catch (e) {
+                            console.error(e);
+                            alert('Gagal mencari lokasi. Periksa koneksi internet Anda.');
+                        } finally {
+                            this.isSearching = false;
+                        }
+                    },
+
+                    selectResult(result) {
+                        const lat = parseFloat(result.lat);
+                        const lng = parseFloat(result.lon);
+                        this.lokasi = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                        this.updateMarkerFromForm();
+                        this.map.setView([lat, lng], 16);
+                        this.showDropdown = false;
+                        this.searchQuery = result.display_name.split(',')[0]; // Set input to the primary name
                     }
                 }));
             });
@@ -112,6 +148,32 @@
 
 <div x-data="locationPicker({ initialValue: '{{ $lokasiValue ?? '' }}' })" x-init="initMap()" class="w-full">
     <label class="block text-content-secondary text-sm mb-2">Tag Lokasi Maps (Koordinat)</label>
+    
+    <div class="relative mb-2">
+        <div class="flex gap-2">
+            <input type="text" x-model="searchQuery" @keydown.enter.prevent="searchLocation()" @click.away="showDropdown = false" @focus="if(searchResults.length > 0) showDropdown = true" class="input-field" placeholder="Cari nama jalan, desa, atau kota..." autocomplete="off">
+            <button type="button" @click="searchLocation()" class="btn-secondary px-4 flex-shrink-0" :disabled="isSearching">
+                <span x-show="!isSearching">Cari</span>
+                <span x-show="isSearching" class="text-content-tertiary">Mencari...</span>
+            </button>
+        </div>
+
+        {{-- Dropdown Hasil Pencarian --}}
+        <div x-show="showDropdown" x-transition.opacity 
+             class="absolute top-full left-0 mt-1 w-full bg-white border border-border rounded-lg shadow-xl max-h-60 overflow-y-auto z-[99]"
+             style="display: none;">
+            <template x-if="searchResults.length === 0">
+                <div class="p-4 text-center text-sm text-content-tertiary">Pencarian tidak ditemukan</div>
+            </template>
+            <template x-for="result in searchResults" :key="result.place_id">
+                <button type="button" @click="selectResult(result)" class="w-full text-left px-4 py-3 hover:bg-base-page border-b border-border last:border-b-0 transition-colors">
+                    <p class="text-sm text-content-primary font-medium" x-text="result.name || result.display_name.split(',')[0]"></p>
+                    <p class="text-xs text-content-secondary mt-0.5" x-text="result.display_name"></p>
+                </button>
+            </template>
+        </div>
+    </div>
+
     <div class="flex gap-2 mb-2">
         <input type="text" name="lokasi" x-model="lokasi" class="input-field bg-base-page" placeholder="Klik pada peta atau geser marker" @change="updateMarkerFromForm()" readonly>
         <button type="button" @click="lokasi = ''; updateMarkerFromForm()" class="btn-secondary px-3 py-2 flex-shrink-0" title="Reset Lokasi">
