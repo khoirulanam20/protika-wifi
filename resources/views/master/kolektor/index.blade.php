@@ -108,8 +108,8 @@
         </div>
 
         {{-- Modal Pop-up --}}
-        <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center" style="display: none;">
-            <div x-show="showModal" x-transition.opacity class="absolute inset-0 bg-content-primary/40 backdrop-blur-sm"
+        <div x-show="showModal" class="fixed inset-0 z-50 overflow-y-auto px-4 pt-4 pb-24" style="display: none;">
+            <div x-show="showModal" x-transition.opacity class="fixed inset-0 bg-content-primary/40 backdrop-blur-sm"
                 @click="showModal = false"></div>
 
             <div x-show="showModal" x-transition:enter="transition ease-out duration-300"
@@ -118,9 +118,9 @@
                 x-transition:leave="transition ease-in duration-200"
                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                 x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-                class="relative bg-white rounded-xl shadow-modal w-full max-w-2xl mx-4 z-10 overflow-hidden max-h-[90vh] flex flex-col">
+                class="relative bg-white rounded-xl shadow-modal w-full max-w-2xl mx-auto z-10 overflow-hidden">
 
-                <div class="px-6 py-4 border-b border-border flex justify-between items-center bg-base-page flex-shrink-0">
+                <div class="px-6 py-4 border-b border-border flex justify-between items-center bg-base-page">
                     <h3 class="text-lg font-semibold text-content-primary"
                         x-text="mode === 'create' ? 'Tambah Kolektor Baru' : 'Edit Data Kolektor'"></h3>
                     <button @click="showModal = false"
@@ -132,7 +132,7 @@
                     </button>
                 </div>
 
-                <form :action="formAction" method="POST" class="overflow-y-auto flex-1">
+                <form :action="formAction" method="POST">
                     @csrf
                     <input type="hidden" name="_method" :value="formMethod">
 
@@ -156,7 +156,8 @@
                                 @include('layouts.components.wilayah-api')
                                 <div>
                                     <label class="block text-content-secondary text-sm mb-2">Kontak / No. HP</label>
-                                    <input type="text" name="kontak" x-model="formData.kontak" class="input-field" placeholder="08xxxxxxxxxx">
+                                    <input type="text" name="kontak" x-model="formData.kontak" class="input-field"
+                                        placeholder="08xxxxxxxxxx">
                                 </div>
                                 @include('layouts.components.location-picker')
                             </div>
@@ -192,7 +193,7 @@
                         </div>
                     </div>
 
-                    <div class="px-6 py-4 border-t border-border flex justify-end gap-3 bg-base-page flex-shrink-0">
+                    <div class="px-6 py-4 border-t border-border flex justify-end gap-3 bg-base-page">
                         <button type="button" @click="showModal = false" class="btn-secondary">Batal</button>
                         <button type="submit" class="btn-primary"
                             x-text="mode === 'create' ? 'Simpan Kolektor' : 'Update Kolektor'"></button>

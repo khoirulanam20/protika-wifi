@@ -119,6 +119,72 @@ class TagihanController extends Controller
         return redirect()->route('tagihan.index')->with('success', 'Status tagihan berhasil diperbarui.');
     }
 
+    /**
+     * Quick-pay: langsung tandai lunas via checkbox.
+     * Otomatis set nominal terbayar = nominal penuh, tanggal bayar = hari ini.
+     */
+    public function lunaskanCepat(Tagihan $tagihan)
+    {
+        // Hanya bisa dilunaskan jika belum lunas
+        if ($tagihan->status === 'lunas') {
+            return redirect()->back()->with('info', 'Tagihan sudah lunas.');
+        }
+
+        $tagihan->update([
+            'status'        => 'lunas',
+            'terbayar'      => $tagihan->nominal,
+            'tanggal_bayar' => now()->toDateString(),
+        ]);
+
+        return redirect()->back()->with('success', 'Tagihan ' . $tagihan->pelanggan->nama_pelanggan . ' berhasil dilunaskan.');
+    }
+
+    /**
+     * Batal Lunas: reset tagihan kembali ke belum_lunas.
+     */
+    public function batalLunas(Tagihan $tagihan)
+    {
+        if ($tagihan->status !== 'lunas') {
+            return redirect()->back()->with('info', 'Tagihan belum berstatus lunas.');
+        }
+
+        $tagihan->update([
+            'status'        => 'belum_lunas',
+            'terbayar'      => 0,
+            'tanggal_bayar' => null,
+            'keterangan'    => null,
+        ]);
+
+        return redirect()->back()->with('info', 'Pelunasan tagihan ' . $tagihan->pelanggan->nama_pelanggan . ' berhasil dibatalkan.');
+    }
+
+    /**
+     * Bulk Quick-pay: tandai banyak lunas sekaligus.
+     */
+    public function lunaskanBanyak(Request $request)
+    {
+        $request->validate([
+            'tagihan_ids'   => 'required|array',
+            'tagihan_ids.*' => 'exists:tagihan,id'
+        ]);
+
+        $tagihans = Tagihan::whereIn('id', $request->tagihan_ids)
+            ->where('status', '!=', 'lunas')
+            ->get();
+
+        $count = 0;
+        foreach ($tagihans as $tagihan) {
+            $tagihan->update([
+                'status'        => 'lunas',
+                'terbayar'      => $tagihan->nominal,
+                'tanggal_bayar' => now()->toDateString(),
+            ]);
+            $count++;
+        }
+
+        return redirect()->back()->with('success', $count . ' tagihan berhasil dilunaskan.');
+    }
+
     public function destroy(Tagihan $tagihan)
     {
         // Hanya superadmin

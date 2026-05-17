@@ -18,20 +18,27 @@ require __DIR__ . '/auth.php';
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::middleware(['role:superadmin'])->prefix('master')->name('master.')->group(function () {
+    Route::middleware(['role:superadmin|kolektor'])->prefix('master')->name('master.')->group(function () {
         Route::resource('pelanggan',  PelangganController::class);
         Route::resource('dusun',      DusunController::class);
         Route::resource('bulanan',    BulanController::class);
-        Route::resource('kolektor',   KolektorController::class);
+
         Route::resource('teknisi',    TeknisiController::class);
         Route::resource('penagih',    PenagihController::class);
-        Route::resource('users',      UserController::class);
+        
+        Route::middleware(['role:superadmin'])->group(function () {
+            Route::resource('kolektor',   KolektorController::class);
+            Route::resource('users',      UserController::class);
+        });
     });
 
-    Route::middleware(['role:superadmin|kolektor'])->prefix('tagihan')->name('tagihan.')->group(function () {
-        Route::get('/rekap',      [RekapController::class, 'index'])->name('rekap');
-        Route::get('/rekap/export', [RekapController::class, 'export'])->name('rekap.export')
+    Route::middleware(['role:superadmin|kolektor'])->group(function () {
+        Route::get('/tagihan/rekap',      [RekapController::class, 'index'])->name('tagihan.rekap');
+        Route::post('/tagihan/lunas-banyak', [TagihanController::class, 'lunaskanBanyak'])->name('tagihan.lunas-banyak');
+        Route::get('/tagihan/rekap/export', [RekapController::class, 'export'])->name('tagihan.rekap.export')
              ->middleware('role:superadmin');
-        Route::resource('/',      TagihanController::class)->parameter('', 'tagihan');
+        Route::post('/tagihan/{tagihan}/lunas-cepat', [TagihanController::class, 'lunaskanCepat'])->name('tagihan.lunas-cepat');
+        Route::post('/tagihan/{tagihan}/batal-lunas', [TagihanController::class, 'batalLunas'])->name('tagihan.batal-lunas');
+        Route::resource('tagihan',      TagihanController::class);
     });
 });

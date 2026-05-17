@@ -17,7 +17,7 @@
                     Dashboard
                 </a>
 
-                @role('superadmin')
+                @hasanyrole('superadmin|kolektor')
                 <div class="relative" @click.away="masterMenuOpen = false">
                     <button @click="masterMenuOpen = !masterMenuOpen"
                         class="{{ request()->is('master/*') ? 'nav-active' : 'nav-item' }} inline-flex items-center gap-1">
@@ -36,17 +36,21 @@
                         <a href="{{ route('master.bulanan.index') }}"
                             class="block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5">Paket
                             Bulanan</a>
+                        @role('superadmin')
                         <a href="{{ route('master.kolektor.index') }}"
                             class="block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5">Kolektor</a>
+                        @endrole
                         <a href="{{ route('master.teknisi.index') }}"
                             class="block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5">Teknisi</a>
                         <a href="{{ route('master.penagih.index') }}"
                             class="block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5">Penagih</a>
+                        @role('superadmin')
                         <a href="{{ route('master.users.index') }}"
                             class="block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5">Pengguna</a>
+                        @endrole
                     </div>
                 </div>
-                @endrole
+                @endhasanyrole
 
                 <div class="relative" @click.away="tagihanMenuOpen = false">
                     <button @click="tagihanMenuOpen = !tagihanMenuOpen"

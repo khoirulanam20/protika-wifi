@@ -19,6 +19,10 @@ class PelangganController extends Controller
     public function index(Request $request)
     {
         $query = MasterPelanggan::with(['dusun', 'bulanan', 'kolektor', 'teknisi', 'penagih']);
+        
+        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
+            $query->where('kolektor_id', auth()->user()->kolektor_id);
+        }
 
         $query->when($request->search, function($q, $v) {
             $q->where('nama_pelanggan', 'like', "%$v%");
@@ -33,8 +37,14 @@ class PelangganController extends Controller
 
         $dusun   = MasterDusun::all();
         $bulanan = MasterBulanan::all();
-        $kolektor = MasterKolektor::all();
         $teknisi = MasterTeknisi::all();
+        $penagih = MasterPenagih::all();
+        
+        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
+            $kolektor = MasterKolektor::where('id', auth()->user()->kolektor_id)->get();
+        } else {
+            $kolektor = MasterKolektor::all();
+        }
         $penagih = MasterPenagih::all();
 
         return view('master.pelanggan.index', compact(
@@ -46,8 +56,14 @@ class PelangganController extends Controller
     {
         $dusun   = MasterDusun::all();
         $bulanan = MasterBulanan::all();
-        $kolektor = MasterKolektor::all();
         $teknisi = MasterTeknisi::all();
+        $penagih = MasterPenagih::all();
+        
+        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
+            $kolektor = MasterKolektor::where('id', auth()->user()->kolektor_id)->get();
+        } else {
+            $kolektor = MasterKolektor::all();
+        }
         $penagih = MasterPenagih::all();
         return view('master.pelanggan.create', compact('dusun', 'bulanan', 'kolektor', 'teknisi', 'penagih'));
     }
@@ -69,6 +85,10 @@ class PelangganController extends Controller
             'lokasi'            => 'nullable|string',
         ]);
 
+        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
+            $data['kolektor_id'] = auth()->user()->kolektor_id;
+        }
+
         DB::transaction(function () use ($data) {
             $pelanggan = MasterPelanggan::create($data);
             $this->buatTagihanOtomatis($pelanggan);
@@ -79,9 +99,17 @@ class PelangganController extends Controller
 
     public function edit(MasterPelanggan $pelanggan)
     {
+        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
+            if ($pelanggan->kolektor_id !== auth()->user()->kolektor_id) {
+                abort(403, 'Anda tidak memiliki akses ke pelanggan ini.');
+            }
+            $kolektor = MasterKolektor::where('id', auth()->user()->kolektor_id)->get();
+        } else {
+            $kolektor = MasterKolektor::all();
+        }
+
         $dusun   = MasterDusun::all();
         $bulanan = MasterBulanan::all();
-        $kolektor = MasterKolektor::all();
         $teknisi = MasterTeknisi::all();
         $penagih = MasterPenagih::all();
         return view('master.pelanggan.edit', compact('pelanggan', 'dusun', 'bulanan', 'kolektor', 'teknisi', 'penagih'));
@@ -89,6 +117,11 @@ class PelangganController extends Controller
 
     public function update(Request $request, MasterPelanggan $pelanggan)
     {
+        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
+            if ($pelanggan->kolektor_id !== auth()->user()->kolektor_id) {
+                abort(403, 'Anda tidak memiliki akses ke pelanggan ini.');
+            }
+        }
         $data = $request->validate([
             'nama_pelanggan'    => 'required|string|max:150',
             'kecamatan'         => 'nullable|string|max:100',
@@ -104,6 +137,10 @@ class PelangganController extends Controller
             'lokasi'            => 'nullable|string',
         ]);
 
+        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
+            $data['kolektor_id'] = auth()->user()->kolektor_id;
+        }
+
         $pelanggan->update($data);
 
         return redirect()->route('master.pelanggan.index')->with('success', 'Pelanggan berhasil diperbarui.');
@@ -111,6 +148,11 @@ class PelangganController extends Controller
 
     public function destroy(MasterPelanggan $pelanggan)
     {
+        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
+            if ($pelanggan->kolektor_id !== auth()->user()->kolektor_id) {
+                abort(403, 'Anda tidak memiliki akses ke pelanggan ini.');
+            }
+        }
         $pelanggan->delete();
         return redirect()->route('master.pelanggan.index')->with('success', 'Pelanggan berhasil dihapus.');
     }

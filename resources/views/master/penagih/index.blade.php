@@ -7,32 +7,32 @@
 @section('content')
 
     <div x-data="{ 
-        showModal: {{ $errors->any() ? 'true' : 'false' }}, 
-        mode: 'create',
-        formAction: '{{ route('master.penagih.store') }}',
-        formMethod: 'POST',
-        formData: { nama_penagih: '{{ old('nama_penagih') }}', alamat: '{{ old('alamat') }}', kecamatan: '{{ old('kecamatan') }}', desa: '{{ old('desa') }}' },
+            showModal: {{ $errors->any() ? 'true' : 'false' }}, 
+            mode: 'create',
+            formAction: '{{ route('master.penagih.store') }}',
+            formMethod: 'POST',
+            formData: { nama_penagih: '{{ old('nama_penagih') }}', alamat: '{{ old('alamat') }}', kecamatan: '{{ old('kecamatan') }}', desa: '{{ old('desa') }}' },
 
-        openCreate() {
-            this.mode = 'create';
-            this.formAction = '{{ route('master.penagih.store') }}';
-            this.formMethod = 'POST';
-            this.formData = { nama_penagih: '', alamat: '', kecamatan: '', desa: '' };
-            this.showModal = true;
-        },
-        openEdit(item) {
-            this.mode = 'edit';
-            this.formAction = '/master/penagih/' + item.id;
-            this.formMethod = 'PUT';
-            this.formData = { 
-                nama_penagih: item.nama_penagih, 
-                alamat: item.alamat,
-                kecamatan: item.kecamatan,
-                desa: item.desa
-            };
-            this.showModal = true;
-        }
-    }">
+            openCreate() {
+                this.mode = 'create';
+                this.formAction = '{{ route('master.penagih.store') }}';
+                this.formMethod = 'POST';
+                this.formData = { nama_penagih: '', alamat: '', kecamatan: '', desa: '' };
+                this.showModal = true;
+            },
+            openEdit(item) {
+                this.mode = 'edit';
+                this.formAction = '/master/penagih/' + item.id;
+                this.formMethod = 'PUT';
+                this.formData = { 
+                    nama_penagih: item.nama_penagih, 
+                    alamat: item.alamat,
+                    kecamatan: item.kecamatan,
+                    desa: item.desa
+                };
+                this.showModal = true;
+            }
+        }">
 
         <div class="card overflow-hidden">
             <div class="px-6 py-5 border-b border-border flex items-center justify-between">
@@ -103,8 +103,8 @@
         </div>
 
         {{-- Modal Pop-up --}}
-        <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center" style="display: none;">
-            <div x-show="showModal" x-transition.opacity class="absolute inset-0 bg-content-primary/40 backdrop-blur-sm"
+        <div x-show="showModal" class="fixed inset-0 z-50 overflow-y-auto px-4 pt-4 pb-24" style="display: none;">
+            <div x-show="showModal" x-transition.opacity class="fixed inset-0 bg-content-primary/40 backdrop-blur-sm"
                 @click="showModal = false"></div>
 
             <div x-show="showModal" x-transition:enter="transition ease-out duration-300"
@@ -113,7 +113,7 @@
                 x-transition:leave="transition ease-in duration-200"
                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                 x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-                class="relative bg-white rounded-xl shadow-modal w-full max-w-2xl mx-4 z-10 overflow-hidden">
+                class="relative bg-white rounded-xl shadow-modal w-full max-w-2xl mx-auto z-10 overflow-hidden">
 
                 <div class="px-6 py-4 border-b border-border flex justify-between items-center bg-base-page">
                     <h3 class="text-lg font-semibold text-content-primary"

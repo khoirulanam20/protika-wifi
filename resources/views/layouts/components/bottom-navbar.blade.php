@@ -62,20 +62,24 @@
         </div>
         
         <div class="space-y-4 pb-20">
-            @role('superadmin')
+            @hasanyrole('superadmin|kolektor')
             <div>
                 <p class="text-xs font-semibold text-content-tertiary uppercase tracking-wider mb-2">Master Data</p>
                 <div class="space-y-1">
                     <a href="{{ route('master.pelanggan.index') }}" class="block px-3 py-2 rounded-lg text-sm text-content-secondary hover:bg-primary/5 hover:text-primary">Pelanggan</a>
                     <a href="{{ route('master.dusun.index') }}" class="block px-3 py-2 rounded-lg text-sm text-content-secondary hover:bg-primary/5 hover:text-primary">Wilayah</a>
                     <a href="{{ route('master.bulanan.index') }}" class="block px-3 py-2 rounded-lg text-sm text-content-secondary hover:bg-primary/5 hover:text-primary">Paket Bulanan</a>
+                    @role('superadmin')
                     <a href="{{ route('master.kolektor.index') }}" class="block px-3 py-2 rounded-lg text-sm text-content-secondary hover:bg-primary/5 hover:text-primary">Kolektor</a>
+                    @endrole
                     <a href="{{ route('master.teknisi.index') }}" class="block px-3 py-2 rounded-lg text-sm text-content-secondary hover:bg-primary/5 hover:text-primary">Teknisi</a>
                     <a href="{{ route('master.penagih.index') }}" class="block px-3 py-2 rounded-lg text-sm text-content-secondary hover:bg-primary/5 hover:text-primary">Penagih</a>
+                    @role('superadmin')
                     <a href="{{ route('master.users.index') }}" class="block px-3 py-2 rounded-lg text-sm text-content-secondary hover:bg-primary/5 hover:text-primary">Pengguna</a>
+                    @endrole
                 </div>
             </div>
-            @endrole
+            @endhasanyrole
             
             @role('superadmin')
             <div>

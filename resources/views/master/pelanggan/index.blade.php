@@ -147,8 +147,8 @@
         </div>
 
         {{-- Modal Pop-up --}}
-        <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center" style="display: none;">
-            <div x-show="showModal" x-transition.opacity class="absolute inset-0 bg-content-primary/40 backdrop-blur-sm"
+        <div x-show="showModal" class="fixed inset-0 z-50 overflow-y-auto px-4 pt-4 pb-24" style="display: none;">
+            <div x-show="showModal" x-transition.opacity class="fixed inset-0 bg-content-primary/40 backdrop-blur-sm"
                 @click="showModal = false"></div>
 
             <div x-show="showModal" x-transition:enter="transition ease-out duration-300"
@@ -157,7 +157,7 @@
                 x-transition:leave="transition ease-in duration-200"
                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                 x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-                class="relative bg-white rounded-xl shadow-modal w-full max-w-4xl mx-4 z-10 overflow-hidden">
+                class="relative bg-white rounded-xl shadow-modal w-full max-w-4xl mx-auto z-10 overflow-hidden">
 
                 <div class="px-6 py-4 border-b border-border flex justify-between items-center bg-base-page">
                     <h3 class="text-lg font-semibold text-content-primary"
@@ -175,98 +175,102 @@
                     @csrf
                     <input type="hidden" name="_method" :value="formMethod">
 
-                    <div class="p-6 max-h-[70vh] overflow-y-auto space-y-8">
+                    <div class="p-6 space-y-8">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {{-- Data Pribadi --}}
                             <div class="space-y-4">
-                                <h3 class="text-content-primary font-semibold text-base border-b border-border pb-2">Informasi Dasar</h3>
+                                <h3 class="text-content-primary font-semibold text-base border-b border-border pb-2">
+                                    Informasi Dasar</h3>
 
-                            <div>
-                                <label class="block text-content-secondary text-sm mb-2">Nama Lengkap</label>
-                                <input type="text" name="nama_pelanggan" x-model="formData.nama_pelanggan"
-                                    class="input-field" required>
-                            </div>
-
-                            @include('layouts.components.wilayah-api')
-
-                            <div>
-                                <label class="block text-content-secondary text-sm mb-2">Dusun / Wilayah</label>
-                                <select name="dusun_id" x-model="formData.dusun_id" class="input-field"
-                                    :disabled="!formData.desa">
-                                    <option value="">Pilih Dusun</option>
-                                    <template x-for="d in filteredDusun" :key="d.id">
-                                        <option :value="d.id" x-text="d.dusun"></option>
-                                    </template>
-                                </select>
-                                <p class="text-[10px] text-content-tertiary mt-1" x-show="!formData.desa">Pilih
-                                    desa/kelurahan terlebih dahulu</p>
-                            </div>
-
-                            <div>
-                                <label class="block text-content-secondary text-sm mb-2">Kontak / No. HP</label>
-                                <input type="text" name="kontak" x-model="formData.kontak" class="input-field"
-                                    placeholder="08xxxxxxxxxx">
-                            </div>
-
-                            </div>
-
-                        {{-- Data Layanan --}}
-                        <div class="space-y-4">
-                            <h3 class="text-content-primary font-semibold text-base border-b border-border pb-2">Detail
-                                Layanan</h3>
-
-                            <div>
-                                <label class="block text-content-secondary text-sm mb-2">Paket Bulanan</label>
-                                <select name="bulanan_id" x-model="formData.bulanan_id" class="input-field">
-                                    <option value="">Pilih Paket</option>
-                                    @foreach($bulanan as $b)
-                                        <option value="{{ $b->id }}">Rp {{ number_format($b->nominal, 0, ',', '.') }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-content-secondary text-sm mb-2">Kolektor</label>
-                                    <select name="kolektor_id" x-model="formData.kolektor_id" class="input-field">
-                                        <option value="">Pilih Kolektor</option>
-                                        @foreach($kolektor as $k)
-                                            <option value="{{ $k->id }}">{{ $k->nama_kolektor }}</option>
+                                    <label class="block text-content-secondary text-sm mb-2">Nama Lengkap</label>
+                                    <input type="text" name="nama_pelanggan" x-model="formData.nama_pelanggan"
+                                        class="input-field" required>
+                                </div>
+
+                                @include('layouts.components.wilayah-api')
+
+                                <div>
+                                    <label class="block text-content-secondary text-sm mb-2">Dusun / Wilayah</label>
+                                    <select name="dusun_id" x-model="formData.dusun_id" class="input-field"
+                                        :disabled="!formData.desa">
+                                        <option value="">Pilih Dusun</option>
+                                        <template x-for="d in filteredDusun" :key="d.id">
+                                            <option :value="d.id" x-text="d.dusun"></option>
+                                        </template>
+                                    </select>
+                                    <p class="text-[10px] text-content-tertiary mt-1" x-show="!formData.desa">Pilih
+                                        desa/kelurahan terlebih dahulu</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-content-secondary text-sm mb-2">Kontak / No. HP</label>
+                                    <input type="text" name="kontak" x-model="formData.kontak" class="input-field"
+                                        placeholder="08xxxxxxxxxx">
+                                </div>
+
+                            </div>
+
+                            {{-- Data Layanan --}}
+                            <div class="space-y-4">
+                                <h3 class="text-content-primary font-semibold text-base border-b border-border pb-2">Detail
+                                    Layanan</h3>
+
+                                <div>
+                                    <label class="block text-content-secondary text-sm mb-2">Paket Bulanan</label>
+                                    <select name="bulanan_id" x-model="formData.bulanan_id" class="input-field">
+                                        <option value="">Pilih Paket</option>
+                                        @foreach($bulanan as $b)
+                                            <option value="{{ $b->id }}">Rp {{ number_format($b->nominal, 0, ',', '.') }}
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>
 
-                                <div>
-                                    <label class="block text-content-secondary text-sm mb-2">Teknisi Pemasangan</label>
-                                    <select name="teknisi_id" x-model="formData.teknisi_id" class="input-field">
-                                        <option value="">Pilih Teknisi</option>
-                                        @foreach($teknisi as $t)
-                                            <option value="{{ $t->id }}">{{ $t->nama_teknisi }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-content-secondary text-sm mb-2">Kolektor</label>
+                                        <select name="kolektor_id" x-model="formData.kolektor_id" class="input-field" {{ auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin') ? 'disabled' : '' }}>
+                                            <option value="">Pilih Kolektor</option>
+                                            @foreach($kolektor as $k)
+                                                <option value="{{ $k->id }}">{{ $k->nama_kolektor }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
 
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-content-secondary text-sm mb-2">Tanggal Pasang</label>
-                                    <input type="date" name="tanggal_pemasangan" x-model="formData.tanggal_pemasangan"
-                                        class="input-field">
+                                    <div>
+                                        <label class="block text-content-secondary text-sm mb-2">Teknisi Pemasangan</label>
+                                        <select name="teknisi_id" x-model="formData.teknisi_id" class="input-field">
+                                            <option value="">Pilih Teknisi</option>
+                                            @foreach($teknisi as $t)
+                                                <option value="{{ $t->id }}">{{ $t->nama_teknisi }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-content-secondary text-sm mb-2">Status Alat</label>
-                                    <select name="status_alat" x-model="formData.status_alat" class="input-field" required>
-                                        <option value="pinjam">Pinjam</option>
-                                        <option value="beli">Beli</option>
-                                    </select>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-content-secondary text-sm mb-2">Tanggal Pasang</label>
+                                        <input type="date" name="tanggal_pemasangan" x-model="formData.tanggal_pemasangan"
+                                            class="input-field">
+                                    </div>
+                                    <div>
+                                        <label class="block text-content-secondary text-sm mb-2">Status Alat</label>
+                                        <select name="status_alat" x-model="formData.status_alat" class="input-field"
+                                            required>
+                                            <option value="pinjam">Pinjam</option>
+                                            <option value="beli">Beli</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
                             </div>
                         </div>
 
                         {{-- Lokasi Pemasangan --}}
                         <div class="space-y-4">
-                            <h3 class="text-content-primary font-semibold text-base border-b border-border pb-2">Peta Lokasi Pemasangan</h3>
+                            <h3 class="text-content-primary font-semibold text-base border-b border-border pb-2">Peta Lokasi
+                                Pemasangan</h3>
                             @include('layouts.components.location-picker')
                         </div>
                     </div>
@@ -335,7 +339,7 @@
                         this.formMethod = 'POST';
                         this.formData = {
                             nama_pelanggan: '', kecamatan: '', desa: '', dusun_id: '',
-                            bulanan_id: '', kolektor_id: '', teknisi_id: '', status_alat: 'pinjam', tanggal_pemasangan: '',
+                            bulanan_id: '', kolektor_id: '{{ auth()->user()->hasRole("kolektor") && !auth()->user()->hasRole("superadmin") ? auth()->user()->kolektor_id : "" }}', teknisi_id: '', status_alat: 'pinjam', tanggal_pemasangan: '',
                             kontak: '', lokasi: ''
                         };
                         this.showModal = true;

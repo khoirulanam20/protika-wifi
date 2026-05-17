@@ -23,6 +23,24 @@
             </div>
         @endif
 
+        {{-- Flash Messages --}}
+        @if(session('success'))
+            <div class="mb-4 p-4 rounded-xl bg-status-success/10 border border-status-success/20 flex items-center gap-3">
+                <svg class="w-5 h-5 text-status-success flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <p class="text-status-success font-medium text-sm">{{ session('success') }}</p>
+            </div>
+        @endif
+        @if(session('info'))
+            <div class="mb-4 p-4 rounded-xl bg-status-info/10 border border-status-info/20 flex items-center gap-3">
+                <svg class="w-5 h-5 text-status-info flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p class="text-status-info font-medium text-sm">{{ session('info') }}</p>
+            </div>
+        @endif
+
         <div class="card overflow-hidden">
             {{-- Header --}}
             <div class="px-6 py-5 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -60,16 +78,31 @@
                     <option value="sebagian" {{ request('status') == 'sebagian' ? 'selected' : '' }}>Sebagian</option>
                 </select>
                 <button type="submit" class="btn-primary px-5">Filter</button>
-                @if(request()->hasAny(['search', 'status']))
+                @if(request()->hasAny(['search', 'status', 'bulan', 'tahun']))
                     <a href="{{ route('tagihan.index') }}" class="btn-secondary px-5">Reset</a>
                 @endif
             </form>
+
+            {{-- Bulk Action Bar --}}
+            <div x-show="selected.length > 0" x-cloak x-transition class="bg-status-success/10 border-b border-status-success/20 px-6 py-3 flex items-center justify-between">
+                <p class="text-sm text-status-success font-medium">
+                    <span x-text="selected.length"></span> tagihan terpilih
+                </p>
+                <button type="button"
+                    @click="if(confirm('Tandai ' + selected.length + ' tagihan ini sebagai LUNAS?')) submitBulk()"
+                    class="btn-primary py-1.5 text-sm bg-status-success hover:bg-status-success/90">
+                    Tandai Lunas
+                </button>
+            </div>
 
             {{-- Table --}}
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
-                        <tr class="border-b border-border">
+                        <tr class="border-b border-border bg-base-page/50">
+                            <th class="px-4 py-3 text-center w-12">
+                                <input type="checkbox" x-model="selectAll" @change="toggleAll" class="w-4 h-4 rounded border-border text-primary focus:ring-primary">
+                            </th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-semibold text-content-tertiary uppercase tracking-wider">
                                 Pelanggan</th>
@@ -101,6 +134,31 @@
                                 $isTunggakan = $item->is_tunggakan;
                             @endphp
                             <tr class="hover:bg-base-page transition-colors {{ $isTunggakan ? 'bg-status-danger/5' : '' }}">
+                                {{-- Checkbox per baris --}}
+                                <td class="px-4 py-4 text-center">
+                                    @if($item->status === 'lunas')
+                                        {{-- Lunas: checkbox tercentang — uncheck = batal lunas --}}
+                                        <input type="checkbox" checked
+                                            class="w-4 h-4 rounded border-status-success text-status-success focus:ring-status-success cursor-pointer accent-green-500"
+                                            title="Klik untuk batalkan pelunasan"
+                                            onclick="
+                                                event.preventDefault();
+                                                if(confirm('Batalkan pelunasan tagihan {{ addslashes($item->pelanggan->nama_pelanggan) }}?')) {
+                                                    document.getElementById('batal-lunas-{{ $item->id }}').submit();
+                                                }
+                                            ">
+                                        <form id="batal-lunas-{{ $item->id }}" method="POST"
+                                            action="{{ route('tagihan.batal-lunas', $item) }}" style="display:none;">
+                                            @csrf
+                                        </form>
+                                    @else
+                                        {{-- Belum lunas / sebagian: checkbox kosong untuk bulk select --}}
+                                        <input type="checkbox" name="tagihan_ids[]" value="{{ $item->id }}"
+                                            x-model="selected"
+                                            class="w-4 h-4 rounded border-border text-primary focus:ring-primary cursor-pointer">
+                                    @endif
+                                </td>
+
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-2">
                                         @if($isTunggakan)
@@ -196,7 +254,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-12 text-center text-content-tertiary text-sm">
+                                <td colspan="8" class="px-6 py-12 text-center text-content-tertiary text-sm">
                                     Belum ada tagihan untuk periode ini.
                                 </td>
                             </tr>
@@ -204,6 +262,13 @@
                     </tbody>
                 </table>
             </div>
+
+            {{-- Standalone hidden bulk form (avoids nested form issue) --}}
+            <form id="bulkLunasForm" method="POST" action="{{ route('tagihan.lunas-banyak') }}" style="display:none;">
+                @csrf
+                <div id="bulkCheckboxContainer"></div>
+            </form>
+
 
             @if($tagihan->hasPages())
                 <div class="px-6 py-4 border-t border-border">
@@ -213,8 +278,8 @@
         </div>
 
         {{-- Modal Update Pembayaran --}}
-        <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center" style="display: none;">
-            <div x-show="showModal" x-transition.opacity class="absolute inset-0 bg-content-primary/40 backdrop-blur-sm"
+        <div x-show="showModal" class="fixed inset-0 z-50 overflow-y-auto px-4 pt-4 pb-24" style="display: none;">
+            <div x-show="showModal" x-transition.opacity class="fixed inset-0 bg-content-primary/40 backdrop-blur-sm"
                 @click="showModal = false"></div>
 
             <div x-show="showModal" x-transition:enter="transition ease-out duration-300"
@@ -223,7 +288,7 @@
                 x-transition:leave="transition ease-in duration-200"
                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                 x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-                class="relative bg-white rounded-xl shadow-modal w-full max-w-lg mx-4 z-10 overflow-hidden">
+                class="relative bg-white rounded-xl shadow-modal w-full max-w-lg mx-auto z-10 overflow-hidden">
 
                 <div class="px-6 py-4 border-b border-border flex justify-between items-center bg-base-page">
                     <div>
@@ -349,6 +414,17 @@
                         tanggalBayar: '',
                         keterangan: '',
                     },
+                    selected: [],
+                    selectAll: false,
+                    tagihanBelumLunasIds: {{ json_encode($tagihan->where('status', '!=', 'lunas')->pluck('id')) }},
+
+                    toggleAll() {
+                        if (this.selectAll) {
+                            this.selected = this.tagihanBelumLunasIds.map(String);
+                        } else {
+                            this.selected = [];
+                        }
+                    },
 
                     init() {
                         this.$watch('formData.status', (newStatus) => {
@@ -356,6 +432,16 @@
                                 this.formData.nominalBayar = this.formData.nominalTagihan;
                             } else if (newStatus === 'belum_lunas') {
                                 this.formData.nominalBayar = '';
+                            }
+                        });
+
+                        this.$watch('selected', (newVal) => {
+                            if (newVal.length === 0) {
+                                this.selectAll = false;
+                            } else if (newVal.length === this.tagihanBelumLunasIds.length && this.tagihanBelumLunasIds.length > 0) {
+                                this.selectAll = true;
+                            } else {
+                                this.selectAll = false;
                             }
                         });
                     },
@@ -374,6 +460,19 @@
                             keterangan: item.keterangan || '',
                         };
                         this.showModal = true;
+                    },
+
+                    submitBulk() {
+                        const container = document.getElementById('bulkCheckboxContainer');
+                        container.innerHTML = '';
+                        this.selected.forEach(id => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'tagihan_ids[]';
+                            input.value = id;
+                            container.appendChild(input);
+                        });
+                        document.getElementById('bulkLunasForm').submit();
                     }
                 }));
             });

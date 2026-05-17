@@ -7,32 +7,32 @@
 @section('content')
 
     <div x-data="{ 
-        showModal: {{ $errors->any() ? 'true' : 'false' }}, 
-        mode: 'create',
-        formAction: '{{ route('master.users.store') }}',
-        formMethod: 'POST',
-        formData: { name: '{{ old('name') }}', email: '{{ old('email') }}', role: '{{ old('role') }}', kolektor_id: '{{ old('kolektor_id') }}' },
+            showModal: {{ $errors->any() ? 'true' : 'false' }}, 
+            mode: 'create',
+            formAction: '{{ route('master.users.store') }}',
+            formMethod: 'POST',
+            formData: { name: '{{ old('name') }}', email: '{{ old('email') }}', role: '{{ old('role') }}', kolektor_id: '{{ old('kolektor_id') }}' },
 
-        openCreate() {
-            this.mode = 'create';
-            this.formAction = '{{ route('master.users.store') }}';
-            this.formMethod = 'POST';
-            this.formData = { name: '', email: '', role: '', kolektor_id: '' };
-            this.showModal = true;
-        },
-        openEdit(item, roleName) {
-            this.mode = 'edit';
-            this.formAction = '/master/users/' + item.id;
-            this.formMethod = 'PUT';
-            this.formData = { 
-                name: item.name, 
-                email: item.email,
-                role: roleName,
-                kolektor_id: item.kolektor_id || ''
-            };
-            this.showModal = true;
-        }
-    }">
+            openCreate() {
+                this.mode = 'create';
+                this.formAction = '{{ route('master.users.store') }}';
+                this.formMethod = 'POST';
+                this.formData = { name: '', email: '', role: '', kolektor_id: '' };
+                this.showModal = true;
+            },
+            openEdit(item, roleName) {
+                this.mode = 'edit';
+                this.formAction = '/master/users/' + item.id;
+                this.formMethod = 'PUT';
+                this.formData = { 
+                    name: item.name, 
+                    email: item.email,
+                    role: roleName,
+                    kolektor_id: item.kolektor_id || ''
+                };
+                this.showModal = true;
+            }
+        }">
 
         <div class="card overflow-hidden">
             <div class="px-6 py-5 border-b border-border flex items-center justify-between">
@@ -80,7 +80,8 @@
                                     @endforeach
                                 </td>
                                 <td class="px-6 py-4 text-sm text-content-secondary">
-                                    {{ $user->kolektor?->nama_kolektor ?? '—' }}</td>
+                                    {{ $user->kolektor?->nama_kolektor ?? '—' }}
+                                </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-2">
                                         <button @click="openEdit({{ $user->toJson() }}, '{{ $user->getRoleNames()->first() }}')"
@@ -123,8 +124,8 @@
         </div>
 
         {{-- Modal Pop-up --}}
-        <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center" style="display: none;">
-            <div x-show="showModal" x-transition.opacity class="absolute inset-0 bg-content-primary/40 backdrop-blur-sm"
+        <div x-show="showModal" class="fixed inset-0 z-50 overflow-y-auto px-4 pt-4 pb-24" style="display: none;">
+            <div x-show="showModal" x-transition.opacity class="fixed inset-0 bg-content-primary/40 backdrop-blur-sm"
                 @click="showModal = false"></div>
 
             <div x-show="showModal" x-transition:enter="transition ease-out duration-300"
@@ -133,7 +134,7 @@
                 x-transition:leave="transition ease-in duration-200"
                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                 x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-                class="relative bg-white rounded-xl shadow-modal w-full max-w-2xl mx-4 z-10 overflow-hidden">
+                class="relative bg-white rounded-xl shadow-modal w-full max-w-2xl mx-auto z-10 overflow-hidden">
 
                 <div class="px-6 py-4 border-b border-border flex justify-between items-center bg-base-page">
                     <h3 class="text-lg font-semibold text-content-primary"
@@ -151,7 +152,7 @@
                     @csrf
                     <input type="hidden" name="_method" :value="formMethod">
 
-                    <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                    <div class="p-6 space-y-4">
                         <div>
                             <label class="block text-content-secondary text-sm mb-2">Nama Lengkap</label>
                             <input type="text" name="name" x-model="formData.name" class="input-field" required>
