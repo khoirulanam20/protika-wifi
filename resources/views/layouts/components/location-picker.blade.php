@@ -149,7 +149,7 @@
 <div x-data="locationPicker({ initialValue: '{{ $lokasiValue ?? '' }}' })" x-init="initMap()" class="w-full">
     <label class="block text-content-secondary text-sm mb-2">Tag Lokasi Maps (Koordinat)</label>
     
-    <div class="relative mb-2">
+    <div class="relative mb-2 z-50">
         <div class="flex gap-2">
             <input type="text" x-model="searchQuery" @keydown.enter.prevent="searchLocation()" @click.away="showDropdown = false" @focus="if(searchResults.length > 0) showDropdown = true" class="input-field" placeholder="Cari nama jalan, desa, atau kota..." autocomplete="off">
             <button type="button" @click="searchLocation()" class="btn-secondary px-4 flex-shrink-0" :disabled="isSearching">
