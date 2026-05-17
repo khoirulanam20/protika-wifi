@@ -9,7 +9,8 @@ class MasterPelanggan extends Model
     protected $table = 'master_pelanggan';
     protected $fillable = [
         'nama_pelanggan', 'kecamatan', 'desa', 'dusun_id', 'bulanan_id',
-        'tanggal_pemasangan', 'kolektor_id', 'teknisi_id', 'penagih_id', 'status_alat'
+        'tanggal_pemasangan', 'kolektor_id', 'teknisi_id', 'penagih_id', 'status_alat',
+        'kontak', 'lokasi'
     ];
 
     public function dusun()    { return $this->belongsTo(MasterDusun::class, 'dusun_id'); }

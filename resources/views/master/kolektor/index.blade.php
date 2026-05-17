@@ -154,6 +154,11 @@
                                         class="input-field"></textarea>
                                 </div>
                                 @include('layouts.components.wilayah-api')
+                                <div>
+                                    <label class="block text-content-secondary text-sm mb-2">Kontak / No. HP</label>
+                                    <input type="text" name="kontak" x-model="formData.kontak" class="input-field" placeholder="08xxxxxxxxxx">
+                                </div>
+                                @include('layouts.components.location-picker')
                             </div>
                         </div>
 
@@ -213,6 +218,8 @@
                         alamat: '{{ old('alamat') }}',
                         kecamatan: '{{ old('kecamatan') }}',
                         desa: '{{ old('desa') }}',
+                        kontak: '{{ old('kontak') }}',
+                        lokasi: '{{ old('lokasi') }}',
                         email: '{{ old('email') }}',
                         existingEmail: '',
                     },
@@ -221,7 +228,7 @@
                         this.mode = 'create';
                         this.formAction = '{{ route('master.kolektor.store') }}';
                         this.formMethod = 'POST';
-                        this.formData = { nama_kolektor: '', alamat: '', kecamatan: '', desa: '', email: '', existingEmail: '' };
+                        this.formData = { nama_kolektor: '', alamat: '', kecamatan: '', desa: '', kontak: '', lokasi: '', email: '', existingEmail: '' };
                         this.showModal = true;
                     },
 
@@ -234,6 +241,8 @@
                             alamat: item.alamat || '',
                             kecamatan: item.kecamatan || '',
                             desa: item.desa || '',
+                            kontak: item.kontak || '',
+                            lokasi: item.lokasi || '',
                             email: existingEmail || '',
                             existingEmail: existingEmail || '',
                         };

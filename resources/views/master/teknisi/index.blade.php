@@ -11,13 +11,13 @@
         mode: 'create',
         formAction: '{{ route('master.teknisi.store') }}',
         formMethod: 'POST',
-        formData: { nama_teknisi: '{{ old('nama_teknisi') }}', alamat: '{{ old('alamat') }}', kecamatan: '{{ old('kecamatan') }}', desa: '{{ old('desa') }}' },
+        formData: { nama_teknisi: '{{ old('nama_teknisi') }}', alamat: '{{ old('alamat') }}', kecamatan: '{{ old('kecamatan') }}', desa: '{{ old('desa') }}', kontak: '{{ old('kontak') }}', lokasi: '{{ old('lokasi') }}' },
 
         openCreate() {
             this.mode = 'create';
             this.formAction = '{{ route('master.teknisi.store') }}';
             this.formMethod = 'POST';
-            this.formData = { nama_teknisi: '', alamat: '', kecamatan: '', desa: '' };
+            this.formData = { nama_teknisi: '', alamat: '', kecamatan: '', desa: '', kontak: '', lokasi: '' };
             this.showModal = true;
         },
         openEdit(item) {
@@ -28,7 +28,9 @@
                 nama_teknisi: item.nama_teknisi, 
                 alamat: item.alamat,
                 kecamatan: item.kecamatan,
-                desa: item.desa
+                desa: item.desa,
+                kontak: item.kontak || '',
+                lokasi: item.lokasi || ''
             };
             this.showModal = true;
         }
@@ -142,6 +144,11 @@
                             <textarea name="alamat" rows="3" x-model="formData.alamat" class="input-field"></textarea>
                         </div>
                         @include('layouts.components.wilayah-api')
+                        <div>
+                            <label class="block text-content-secondary text-sm mb-2">Kontak / No. HP</label>
+                            <input type="text" name="kontak" x-model="formData.kontak" class="input-field" placeholder="08xxxxxxxxxx">
+                        </div>
+                        @include('layouts.components.location-picker')
                     </div>
 
                     <div class="px-6 py-4 border-t border-border flex justify-end gap-3 bg-base-page">

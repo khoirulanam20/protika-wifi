@@ -191,11 +191,17 @@ document.addEventListener('alpine:init', () => {
             }
         },
         
-        resetAll() {
-            this.selectedProv = '';
-            this.kabupatens = []; this.kecamatans = []; this.desas = [];
+        async resetAll() {
             this.kecName = ''; this.desaName = '';
             this.initialKecamatan = ''; this.initialDesa = '';
+            this.selectedKec = ''; this.selectedDesa = '';
+            this.desas = []; this.kecamatans = [];
+
+            // Default ke Jawa Tengah (33) & Temanggung (3323)
+            this.selectedProv = '33';
+            await this.fetchKab(false);
+            this.selectedKab = '3323';
+            await this.fetchKec(false);
         }
     }));
 });

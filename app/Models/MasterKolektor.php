@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class MasterKolektor extends Model
 {
     protected $table = 'master_kolektor';
-    protected $fillable = ['nama_kolektor', 'alamat', 'kecamatan', 'desa'];
+    protected $fillable = ['nama_kolektor', 'alamat', 'kecamatan', 'desa', 'kontak', 'lokasi'];
 
     public function pelanggan()
     {

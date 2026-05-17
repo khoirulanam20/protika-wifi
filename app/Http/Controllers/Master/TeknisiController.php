@@ -26,6 +26,8 @@ class TeknisiController extends Controller
             'alamat' => 'nullable|string',
             'kecamatan' => 'nullable|string|max:100',
             'desa' => 'nullable|string|max:100',
+            'kontak' => 'nullable|string|max:50',
+            'lokasi' => 'nullable|string',
         ]);
 
         MasterTeknisi::create($data);
@@ -45,6 +47,8 @@ class TeknisiController extends Controller
             'alamat' => 'nullable|string',
             'kecamatan' => 'nullable|string|max:100',
             'desa' => 'nullable|string|max:100',
+            'kontak' => 'nullable|string|max:50',
+            'lokasi' => 'nullable|string',
         ]);
 
         $teknisi->update($data);

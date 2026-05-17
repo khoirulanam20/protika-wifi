@@ -77,7 +77,8 @@
                         @forelse($pelanggan as $item)
                             <tr class="hover:bg-base-page transition-colors">
                                 <td class="px-6 py-4 text-sm text-content-secondary font-mono">
-                                    {{ str_pad($item->id, 4, '0', STR_PAD_LEFT) }}</td>
+                                    {{ str_pad($item->id, 4, '0', STR_PAD_LEFT) }}
+                                </td>
                                 <td class="px-6 py-4 text-sm text-content-primary font-medium">{{ $item->nama_pelanggan }}</td>
                                 <td class="px-6 py-4 text-sm text-content-secondary">
                                     {{ $item->desa }}, {{ $item->kecamatan }}
@@ -90,7 +91,8 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-sm text-content-secondary">
-                                    {{ $item->kolektor?->nama_kolektor ?? '—' }}</td>
+                                    {{ $item->kolektor?->nama_kolektor ?? '—' }}
+                                </td>
                                 <td class="px-6 py-4">
                                     @if($item->status_alat === 'beli')
                                         <span
@@ -155,7 +157,7 @@
                 x-transition:leave="transition ease-in duration-200"
                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                 x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-                class="relative bg-white rounded-xl shadow-modal w-full max-w-2xl mx-4 z-10 overflow-hidden">
+                class="relative bg-white rounded-xl shadow-modal w-full max-w-4xl mx-4 z-10 overflow-hidden">
 
                 <div class="px-6 py-4 border-b border-border flex justify-between items-center bg-base-page">
                     <h3 class="text-lg font-semibold text-content-primary"
@@ -173,11 +175,11 @@
                     @csrf
                     <input type="hidden" name="_method" :value="formMethod">
 
-                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[70vh] overflow-y-auto">
-                        {{-- Data Pribadi --}}
-                        <div class="space-y-4">
-                            <h3 class="text-content-primary font-semibold text-base border-b border-border pb-2">Informasi
-                                Dasar</h3>
+                    <div class="p-6 max-h-[70vh] overflow-y-auto space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {{-- Data Pribadi --}}
+                            <div class="space-y-4">
+                                <h3 class="text-content-primary font-semibold text-base border-b border-border pb-2">Informasi Dasar</h3>
 
                             <div>
                                 <label class="block text-content-secondary text-sm mb-2">Nama Lengkap</label>
@@ -199,7 +201,14 @@
                                 <p class="text-[10px] text-content-tertiary mt-1" x-show="!formData.desa">Pilih
                                     desa/kelurahan terlebih dahulu</p>
                             </div>
-                        </div>
+
+                            <div>
+                                <label class="block text-content-secondary text-sm mb-2">Kontak / No. HP</label>
+                                <input type="text" name="kontak" x-model="formData.kontak" class="input-field"
+                                    placeholder="08xxxxxxxxxx">
+                            </div>
+
+                            </div>
 
                         {{-- Data Layanan --}}
                         <div class="space-y-4">
@@ -216,14 +225,26 @@
                                 </select>
                             </div>
 
-                            <div>
-                                <label class="block text-content-secondary text-sm mb-2">Kolektor Penanggung Jawab</label>
-                                <select name="kolektor_id" x-model="formData.kolektor_id" class="input-field">
-                                    <option value="">Pilih Kolektor</option>
-                                    @foreach($kolektor as $k)
-                                        <option value="{{ $k->id }}">{{ $k->nama_kolektor }}</option>
-                                    @endforeach
-                                </select>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-content-secondary text-sm mb-2">Kolektor</label>
+                                    <select name="kolektor_id" x-model="formData.kolektor_id" class="input-field">
+                                        <option value="">Pilih Kolektor</option>
+                                        @foreach($kolektor as $k)
+                                            <option value="{{ $k->id }}">{{ $k->nama_kolektor }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-content-secondary text-sm mb-2">Teknisi Pemasangan</label>
+                                    <select name="teknisi_id" x-model="formData.teknisi_id" class="input-field">
+                                        <option value="">Pilih Teknisi</option>
+                                        @foreach($teknisi as $t)
+                                            <option value="{{ $t->id }}">{{ $t->nama_teknisi }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
@@ -240,6 +261,13 @@
                                     </select>
                                 </div>
                             </div>
+                            </div>
+                        </div>
+
+                        {{-- Lokasi Pemasangan --}}
+                        <div class="space-y-4">
+                            <h3 class="text-content-primary font-semibold text-base border-b border-border pb-2">Peta Lokasi Pemasangan</h3>
+                            @include('layouts.components.location-picker')
                         </div>
                     </div>
 
@@ -271,8 +299,11 @@
                         dusun_id: '{{ old('dusun_id') }}',
                         bulanan_id: '{{ old('bulanan_id') }}',
                         kolektor_id: '{{ old('kolektor_id') }}',
+                        teknisi_id: '{{ old('teknisi_id') }}',
                         status_alat: '{{ old('status_alat', 'pinjam') }}',
-                        tanggal_pemasangan: '{{ old('tanggal_pemasangan') }}'
+                        tanggal_pemasangan: '{{ old('tanggal_pemasangan') }}',
+                        kontak: '{{ old('kontak') }}',
+                        lokasi: '{{ old('lokasi') }}'
                     },
                     dusunList: @json($dusun),
 
@@ -304,7 +335,8 @@
                         this.formMethod = 'POST';
                         this.formData = {
                             nama_pelanggan: '', kecamatan: '', desa: '', dusun_id: '',
-                            bulanan_id: '', kolektor_id: '', status_alat: 'pinjam', tanggal_pemasangan: ''
+                            bulanan_id: '', kolektor_id: '', teknisi_id: '', status_alat: 'pinjam', tanggal_pemasangan: '',
+                            kontak: '', lokasi: ''
                         };
                         this.showModal = true;
                     },
@@ -326,8 +358,11 @@
                             dusun_id: '', // Biarkan kosong dulu saat DOM re-render
                             bulanan_id: item.bulanan_id || '',
                             kolektor_id: item.kolektor_id || '',
+                            teknisi_id: item.teknisi_id || '',
                             status_alat: item.status_alat || 'pinjam',
-                            tanggal_pemasangan: formattedDate
+                            tanggal_pemasangan: formattedDate,
+                            kontak: item.kontak || '',
+                            lokasi: item.lokasi || ''
                         };
 
                         // Gunakan $nextTick agar DOM <option> dari wilayah selesai di-render

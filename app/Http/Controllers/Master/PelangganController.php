@@ -65,6 +65,8 @@ class PelangganController extends Controller
             'teknisi_id'        => 'nullable|exists:master_teknisi,id',
             'penagih_id'        => 'nullable|exists:master_penagih,id',
             'status_alat'       => 'required|in:beli,pinjam',
+            'kontak'            => 'nullable|string|max:50',
+            'lokasi'            => 'nullable|string',
         ]);
 
         DB::transaction(function () use ($data) {
@@ -98,6 +100,8 @@ class PelangganController extends Controller
             'teknisi_id'        => 'nullable|exists:master_teknisi,id',
             'penagih_id'        => 'nullable|exists:master_penagih,id',
             'status_alat'       => 'required|in:beli,pinjam',
+            'kontak'            => 'nullable|string|max:50',
+            'lokasi'            => 'nullable|string',
         ]);
 
         $pelanggan->update($data);

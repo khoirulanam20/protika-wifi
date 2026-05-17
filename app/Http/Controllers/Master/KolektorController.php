@@ -29,6 +29,8 @@ class KolektorController extends Controller
             'alamat'        => 'nullable|string',
             'kecamatan'     => 'nullable|string|max:100',
             'desa'          => 'nullable|string|max:100',
+            'kontak'        => 'nullable|string|max:50',
+            'lokasi'        => 'nullable|string',
             // Akun login (opsional — hanya jika diisi)
             'email'         => 'nullable|email|unique:users,email',
             'password'      => 'nullable|string|min:6|confirmed',
@@ -40,6 +42,8 @@ class KolektorController extends Controller
                 'alamat'        => $request->alamat,
                 'kecamatan'     => $request->kecamatan,
                 'desa'          => $request->desa,
+                'kontak'        => $request->kontak,
+                'lokasi'        => $request->lokasi,
             ]);
 
             // Buat user login jika email diisi
@@ -69,6 +73,8 @@ class KolektorController extends Controller
             'alamat'        => 'nullable|string',
             'kecamatan'     => 'nullable|string|max:100',
             'desa'          => 'nullable|string|max:100',
+            'kontak'        => 'nullable|string|max:50',
+            'lokasi'        => 'nullable|string',
             'email'         => 'nullable|email|unique:users,email,' . optional($kolektor->user)->id,
             'password'      => 'nullable|string|min:6|confirmed',
         ]);
@@ -79,6 +85,8 @@ class KolektorController extends Controller
                 'alamat'        => $request->alamat,
                 'kecamatan'     => $request->kecamatan,
                 'desa'          => $request->desa,
+                'kontak'        => $request->kontak,
+                'lokasi'        => $request->lokasi,
             ]);
 
             if ($request->filled('email')) {
