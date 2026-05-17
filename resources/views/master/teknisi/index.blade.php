@@ -133,7 +133,7 @@
                     @csrf
                     <input type="hidden" name="_method" :value="formMethod">
 
-                    <div class="p-6 space-y-4">
+                    <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                         <div>
                             <label class="block text-content-secondary text-sm mb-2">Nama Teknisi</label>
                             <input type="text" name="nama_teknisi" x-model="formData.nama_teknisi" class="input-field"
