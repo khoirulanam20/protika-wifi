@@ -58,14 +58,28 @@
             <form method="GET" class="px-6 py-4 border-b border-border flex flex-wrap gap-3 bg-base-page">
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama pelanggan..."
                     class="input-field flex-1 min-w-40">
-                <select name="bulan" class="input-field w-36">
+                <select name="kecamatan" class="input-field w-40">
+                    <option value="">Semua Kecamatan</option>
+                    @foreach($kecamatanList as $kec)
+                        <option value="{{ $kec }}" {{ request('kecamatan') == $kec ? 'selected' : '' }}>{{ $kec }}</option>
+                    @endforeach
+                </select>
+                @role('superadmin')
+                <select name="kolektor_id" class="input-field w-36">
+                    <option value="">Semua Kolektor</option>
+                    @foreach($kolektorList as $kol)
+                        <option value="{{ $kol->id }}" {{ request('kolektor_id') == $kol->id ? 'selected' : '' }}>{{ $kol->nama_kolektor }}</option>
+                    @endforeach
+                </select>
+                @endrole
+                <select name="bulan" class="input-field w-32">
                     @foreach(range(1, 12) as $m)
                         <option value="{{ $m }}" {{ $bulan == $m ? 'selected' : '' }}>
                             {{ date('F', mktime(0, 0, 0, $m, 1)) }}
                         </option>
                     @endforeach
                 </select>
-                <select name="tahun" class="input-field w-28">
+                <select name="tahun" class="input-field w-24">
                     @foreach(range(now()->year - 2, now()->year + 1) as $y)
                         <option value="{{ $y }}" {{ $tahun == $y ? 'selected' : '' }}>{{ $y }}</option>
                     @endforeach
@@ -78,7 +92,7 @@
                     <option value="sebagian" {{ request('status') == 'sebagian' ? 'selected' : '' }}>Sebagian</option>
                 </select>
                 <button type="submit" class="btn-primary px-5">Filter</button>
-                @if(request()->hasAny(['search', 'status', 'bulan', 'tahun']))
+                @if(request()->hasAny(['search', 'status', 'bulan', 'tahun', 'kecamatan', 'kolektor_id']))
                     <a href="{{ route('tagihan.index') }}" class="btn-secondary px-5">Reset</a>
                 @endif
             </form>

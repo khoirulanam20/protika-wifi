@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Tagihan;
 use App\Http\Controllers\Controller;
 use App\Models\Tagihan;
 use App\Models\MasterPelanggan;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\TagihanTerbayarNotification;
 use Carbon\Carbon;
 
 class TagihanController extends Controller
@@ -28,7 +31,9 @@ class TagihanController extends Controller
         $query->when($bulan,              fn($q, $v) => $q->where('bulan',  $v))
               ->when($tahun,              fn($q, $v) => $q->where('tahun',  $v))
               ->when($request->status,   fn($q, $v) => $q->where('status', $v))
-              ->when($request->search,   fn($q, $v) => $q->whereHas('pelanggan', fn($p) => $p->where('nama_pelanggan', 'like', "%$v%")));
+              ->when($request->search,   fn($q, $v) => $q->whereHas('pelanggan', fn($p) => $p->where('nama_pelanggan', 'like', "%$v%")))
+              ->when($request->kecamatan, fn($q, $v) => $q->whereHas('pelanggan', fn($p) => $p->where('kecamatan', $v)))
+              ->when($request->kolektor_id && auth()->user()->hasRole('superadmin'), fn($q, $v) => $q->where('kolektor_id', $v));
 
         $tagihan = $query->latest()->paginate(20)->withQueryString();
 
@@ -42,13 +47,19 @@ class TagihanController extends Controller
                   });
             });
 
+        $kecamatanQuery = MasterPelanggan::distinct()->select('kecamatan')->whereNotNull('kecamatan');
+
         if (auth()->user()->hasRole('kolektor')) {
             $tunggakanQuery->where('kolektor_id', auth()->user()->kolektor_id);
+            $kecamatanQuery->where('kolektor_id', auth()->user()->kolektor_id);
         }
 
         $totalTunggakan = $tunggakanQuery->count();
+        
+        $kecamatanList = $kecamatanQuery->pluck('kecamatan')->filter()->toArray();
+        $kolektorList = auth()->user()->hasRole('superadmin') ? \App\Models\MasterKolektor::all() : [];
 
-        return view('tagihan.index', compact('tagihan', 'bulan', 'tahun', 'totalTunggakan'));
+        return view('tagihan.index', compact('tagihan', 'bulan', 'tahun', 'totalTunggakan', 'kecamatanList', 'kolektorList'));
     }
 
     public function create()
@@ -116,6 +127,10 @@ class TagihanController extends Controller
 
         $tagihan->update($updateData);
 
+        if (in_array($tagihan->status, ['lunas', 'sebagian'])) {
+            $this->notifyTagihanTerbayar($tagihan);
+        }
+
         return redirect()->route('tagihan.index')->with('success', 'Status tagihan berhasil diperbarui.');
     }
 
@@ -135,6 +150,8 @@ class TagihanController extends Controller
             'terbayar'      => $tagihan->nominal,
             'tanggal_bayar' => now()->toDateString(),
         ]);
+
+        $this->notifyTagihanTerbayar($tagihan);
 
         return redirect()->back()->with('success', 'Tagihan ' . $tagihan->pelanggan->nama_pelanggan . ' berhasil dilunaskan.');
     }
@@ -179,6 +196,7 @@ class TagihanController extends Controller
                 'terbayar'      => $tagihan->nominal,
                 'tanggal_bayar' => now()->toDateString(),
             ]);
+            $this->notifyTagihanTerbayar($tagihan);
             $count++;
         }
 
@@ -218,6 +236,23 @@ class TagihanController extends Controller
                     'created_by'  => $user->id,
                 ]
             );
+        }
+    }
+
+    /**
+     * Helper to notify superadmin and kolektor when tagihan is paid
+     */
+    private function notifyTagihanTerbayar(Tagihan $tagihan): void
+    {
+        $superadmins = User::role('superadmin')->get();
+        Notification::send($superadmins, new TagihanTerbayarNotification($tagihan));
+        
+        if ($tagihan->kolektor_id) {
+            $kolektors = User::where('kolektor_id', $tagihan->kolektor_id)->get();
+            $kolektorsToNotify = $kolektors->reject(fn($user) => $superadmins->contains('id', $user->id));
+            if ($kolektorsToNotify->count() > 0) {
+                Notification::send($kolektorsToNotify, new TagihanTerbayarNotification($tagihan));
+            }
         }
     }
 }

@@ -48,4 +48,30 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/tagihan/{tagihan}/batal-lunas', [TagihanController::class, 'batalLunas'])->name('tagihan.batal-lunas');
         Route::resource('tagihan',      TagihanController::class);
     });
+
+    // Notification Routes
+    Route::get('/api/notifications', function(Illuminate\Http\Request $request) {
+        return response()->json($request->user()->notifications()->take(10)->get());
+    })->name('notifications.index');
+    
+    Route::post('/api/notifications/{id}/read', function(Illuminate\Http\Request $request, $id) {
+        $notification = $request->user()->notifications()->findOrFail($id);
+        $notification->markAsRead();
+        return response()->json(['success' => true]);
+    });
+    
+    Route::post('/api/notifications/read-all', function(Illuminate\Http\Request $request) {
+        $request->user()->unreadNotifications->markAsRead();
+        return response()->json(['success' => true]);
+    });
+    
+    Route::delete('/api/notifications/{id}', function(Illuminate\Http\Request $request, $id) {
+        $request->user()->notifications()->where('id', $id)->delete();
+        return response()->json(['success' => true]);
+    });
+    
+    Route::delete('/api/notifications', function(Illuminate\Http\Request $request) {
+        $request->user()->notifications()->delete();
+        return response()->json(['success' => true]);
+    });
 });

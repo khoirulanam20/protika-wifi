@@ -87,14 +87,45 @@
                         d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
             </button>
-            <button class="p-2 text-content-tertiary hover:text-content-primary transition-colors relative">
-                <div class="absolute top-1.5 right-1.5 w-2 h-2 bg-status-danger rounded-full"></div>
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
-                    </path>
-                </svg>
-            </button>
+            <!-- Notifications Dropdown -->
+            <div class="relative" x-data="notificationDropdown()" x-init="initNotifications({{ auth()->id() }})" @click.away="open = false">
+                <button @click="open = !open" class="p-2 text-content-tertiary hover:text-content-primary transition-colors relative">
+                    <div x-show="unreadCount > 0" x-text="unreadCount" class="absolute top-0 right-0 flex items-center justify-center min-w-[1.2rem] h-[1.2rem] px-1 text-[10px] font-bold text-white bg-status-danger rounded-full border-2 border-white transform translate-x-1/4 -translate-y-1/4"></div>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                        </path>
+                    </svg>
+                </button>
+                <div x-show="open" x-transition.opacity.duration.200ms
+                    class="absolute top-full right-0 mt-2 bg-white border border-border rounded-xl shadow-lg z-50 overflow-hidden"
+                    style="display:none; width: 360px; max-width: 90vw;">
+                    <div class="px-5 py-3 border-b border-border flex justify-between items-center bg-gray-50/50">
+                        <span class="font-bold text-sm text-content-primary">Notifikasi</span>
+                        <div class="flex gap-3">
+                            <button @click="markAllAsRead" x-show="unreadCount > 0" class="text-[11px] text-primary font-semibold hover:text-primary-dark transition-colors">Tandai dibaca</button>
+                            <button @click="deleteAllNotifications" x-show="notifications.length > 0" class="text-[11px] text-status-danger font-semibold hover:text-red-700 transition-colors">Hapus semua</button>
+                        </div>
+                    </div>
+                    <div class="max-h-[350px] overflow-y-auto">
+                        <template x-for="notif in notifications" :key="notif.id">
+                            <div class="relative group px-4 py-3 border-b border-border hover:bg-gray-50 transition-colors" :class="{'bg-blue-50/30': !notif.read_at}">
+                                <a :href="notif.data.url" @click="markAsRead(notif.id)" class="block pr-6">
+                                    <div class="font-semibold text-sm text-content-primary" x-text="notif.data.title"></div>
+                                    <div class="text-xs text-content-secondary mt-1" x-text="notif.data.message"></div>
+                                    <div class="text-[10px] text-gray-400 mt-1" x-text="new Date(notif.created_at).toLocaleString('id-ID')"></div>
+                                </a>
+                                <button @click.stop="deleteNotification(notif.id)" class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-status-danger hover:bg-red-50 rounded-md transition-colors opacity-0 group-hover:opacity-100" title="Hapus notifikasi">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                        </template>
+                        <div x-show="notifications.length === 0" class="px-4 py-8 text-center text-sm text-content-secondary">
+                            Belum ada notifikasi.
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="h-6 w-px bg-border mx-2"></div>
 

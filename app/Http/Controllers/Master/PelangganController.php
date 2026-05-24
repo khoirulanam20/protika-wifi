@@ -10,8 +10,11 @@ use App\Models\MasterKolektor;
 use App\Models\MasterTeknisi;
 use App\Models\MasterPenagih;
 use App\Models\Tagihan;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\PelangganBaruNotification;
 use Carbon\Carbon;
 
 class PelangganController extends Controller
@@ -89,10 +92,13 @@ class PelangganController extends Controller
             $data['kolektor_id'] = auth()->user()->kolektor_id;
         }
 
-        DB::transaction(function () use ($data) {
+        DB::transaction(function () use ($data, &$pelanggan) {
             $pelanggan = MasterPelanggan::create($data);
             $this->buatTagihanOtomatis($pelanggan);
         });
+
+        $superadmins = User::role('superadmin')->get();
+        Notification::send($superadmins, new PelangganBaruNotification($pelanggan));
 
         return redirect()->route('master.pelanggan.index')->with('success', 'Pelanggan berhasil ditambahkan dan tagihan bulan ini telah dibuat otomatis.');
     }
