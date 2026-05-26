@@ -101,6 +101,13 @@ class PelangganController extends Controller
             $data['kolektor_id'] = auth()->user()->kolektor_id;
         }
 
+        if (MasterPelanggan::where('nama_pelanggan', $data['nama_pelanggan'])
+            ->where('kolektor_id', $data['kolektor_id'])
+            ->exists()
+        ) {
+            return back()->withErrors(['nama_pelanggan' => 'Nama pelanggan "' . $data['nama_pelanggan'] . '" sudah terdaftar untuk kolektor ini.'])->withInput();
+        }
+
         DB::transaction(function () use ($data, &$pelanggan) {
             $pelanggan = MasterPelanggan::create($data);
             $this->buatTagihanOtomatis($pelanggan);
@@ -154,6 +161,14 @@ class PelangganController extends Controller
 
         if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
             $data['kolektor_id'] = auth()->user()->kolektor_id;
+        }
+
+        if (MasterPelanggan::where('nama_pelanggan', $data['nama_pelanggan'])
+            ->where('kolektor_id', $data['kolektor_id'])
+            ->where('id', '!=', $pelanggan->id)
+            ->exists()
+        ) {
+            return back()->withErrors(['nama_pelanggan' => 'Nama pelanggan "' . $data['nama_pelanggan'] . '" sudah terdaftar untuk kolektor ini.'])->withInput();
         }
 
         $pelanggan->update($data);

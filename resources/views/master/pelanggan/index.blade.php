@@ -199,7 +199,10 @@
                                 <div>
                                     <label class="block text-content-secondary text-sm mb-2">Nama Lengkap</label>
                                     <input type="text" name="nama_pelanggan" x-model="formData.nama_pelanggan"
-                                        class="input-field" required>
+                                        class="input-field @error('nama_pelanggan') border-status-danger @enderror" required>
+                                    @error('nama_pelanggan')
+                                        <p class="text-sm text-status-danger mt-1.5">{{ $message }}</p>
+                                    @enderror
                                 </div>
 
                                 @include('layouts.components.wilayah-api')
