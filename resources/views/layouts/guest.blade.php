@@ -5,25 +5,36 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ config('app.name', 'Protika WiFi') }} — Login</title>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-        <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
-            <div>
-                <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
+    <body class="antialiased selection:bg-primary/20 selection:text-primary-deep">
+        <div class="min-h-screen flex flex-col sm:justify-center items-center px-4 py-8"
+             style="background: linear-gradient(135deg, #F0F4FF 0%, #EFF6FF 100%);">
+
+            {{-- Branding --}}
+            <div class="mb-8 animate-fade-in-up">
+                <a href="/" class="inline-flex items-center gap-2.5 px-5 py-2 rounded-full border border-border bg-white/70 backdrop-blur-sm shadow-sm">
+                    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                        P
+                    </div>
+                    <span class="font-semibold text-content-primary text-lg">Protika WiFi</span>
                 </a>
             </div>
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
-                {{ $slot }}
+            {{-- Login Card --}}
+            <div class="w-full max-w-md animate-fade-in-up" style="animation-delay: 0.1s;">
+                <div class="bg-white/70 backdrop-blur-xl border border-white/40 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8">
+                    {{ $slot }}
+                </div>
+
+                <p class="text-center text-xs text-content-tertiary mt-6 animate-fade-in-up" style="animation-delay: 0.2s;">
+                    &copy; {{ date('Y') }} Protika WiFi. All rights reserved.
+                </p>
             </div>
         </div>
     </body>
