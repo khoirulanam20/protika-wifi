@@ -111,38 +111,38 @@
             </div>
 
             {{-- Table --}}
-            <div class="overflow-x-auto -mx-4 md:mx-0">
+            <div class="overflow-x-auto">
                 <div class="min-w-max md:min-w-0">
                     <table class="w-full">
                         <thead>
                             <tr class="border-b border-border bg-base-page/50">
-                                <th class="px-2 md:px-4 py-3 text-center w-8 md:w-12">
+                                <th class="pl-4 pr-2 md:px-4 py-3 text-center w-12 md:w-12">
                                     <input type="checkbox" x-model="selectAll" @change="toggleAll" class="w-3.5 h-3.5 md:w-4 md:h-4 rounded border-border text-primary focus:ring-primary">
                                 </th>
                                 <th
-                                    class="px-3 md:px-6 py-3 text-left text-[10px] md:text-xs font-semibold text-content-tertiary uppercase tracking-wider">
+                                    class="pl-2 pr-3 md:px-6 py-3 text-left text-[10px] md:text-xs font-semibold text-content-tertiary uppercase tracking-wider">
                                     Pelanggan</th>
                                 <th
-                                    class="px-3 md:px-6 py-3 text-left text-[10px] md:text-xs font-semibold text-content-tertiary uppercase tracking-wider">
+                                    class="px-2 md:px-6 py-3 text-left text-[10px] md:text-xs font-semibold text-content-tertiary uppercase tracking-wider">
                                     Periode</th>
                                 <th
-                                    class="px-3 md:px-6 py-3 text-left text-[10px] md:text-xs font-semibold text-content-tertiary uppercase tracking-wider">
+                                    class="px-2 md:px-6 py-3 text-left text-[10px] md:text-xs font-semibold text-content-tertiary uppercase tracking-wider">
                                     Nominal</th>
                                 <th
-                                    class="px-3 md:px-6 py-3 text-left text-[10px] md:text-xs font-semibold text-content-tertiary uppercase tracking-wider">
+                                    class="px-2 md:px-6 py-3 text-left text-[10px] md:text-xs font-semibold text-content-tertiary uppercase tracking-wider">
                                     Status</th>
                                 <th
-                                    class="px-3 md:px-6 py-3 text-left text-[10px] md:text-xs font-semibold text-content-tertiary uppercase tracking-wider">
+                                    class="px-2 md:px-6 py-3 text-left text-[10px] md:text-xs font-semibold text-content-tertiary uppercase tracking-wider">
                                     <span class="md:hidden">J. Tempo</span>
                                     <span class="hidden md:inline">Jatuh Tempo</span>
                                 </th>
                                 <th
-                                    class="px-3 md:px-6 py-3 text-left text-[10px] md:text-xs font-semibold text-content-tertiary uppercase tracking-wider">
+                                    class="px-2 md:px-6 py-3 text-left text-[10px] md:text-xs font-semibold text-content-tertiary uppercase tracking-wider">
                                     <span class="md:hidden">Bayar</span>
                                     <span class="hidden md:inline">Tgl Bayar</span>
                                 </th>
                                 <th
-                                    class="px-3 md:px-6 py-3 text-left text-[10px] md:text-xs font-semibold text-content-tertiary uppercase tracking-wider">
+                                    class="pl-2 pr-4 md:px-6 py-3 text-left text-[10px] md:text-xs font-semibold text-content-tertiary uppercase tracking-wider">
                                     Aksi</th>
                             </tr>
                         </thead>
@@ -155,7 +155,7 @@
                             @endphp
                             <tr class="hover:bg-base-page transition-colors {{ $isTunggakan ? 'bg-status-danger/5' : '' }}">
                                 {{-- Checkbox per baris --}}
-                                <td class="px-2 md:px-4 py-4 text-center">
+                                <td class="pl-4 pr-2 md:px-4 py-4 text-center">
                                     @if($item->status === 'lunas')
                                         {{-- Lunas: checkbox tercentang — uncheck = batal lunas --}}
                                         <input type="checkbox" checked
@@ -179,7 +179,7 @@
                                     @endif
                                 </td>
 
-                                <td class="px-3 md:px-6 py-4">
+                                <td class="pl-2 pr-3 md:px-6 py-4">
                                     <div class="flex items-center gap-2">
                                         @if($isTunggakan)
                                             <span class="w-2 h-2 rounded-full bg-status-danger flex-shrink-0"
@@ -193,14 +193,14 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-3 md:px-6 py-4 text-xs md:text-sm text-content-secondary">
+                                <td class="px-2 md:px-6 py-4 text-xs md:text-sm text-content-secondary">
                                     <span class="md:hidden">{{ date('M', mktime(0, 0, 0, $item->bulan, 1)) }} '{{ substr($item->tahun, 2) }}</span>
                                     <span class="hidden md:inline">{{ date('M', mktime(0, 0, 0, $item->bulan, 1)) }} {{ $item->tahun }}</span>
                                     @if($isTunggakan)
                                         <span class="ml-1 text-[9px] md:text-xs font-semibold text-status-danger block md:inline">(Tunggakan)</span>
                                     @endif
                                 </td>
-                                <td class="px-3 md:px-6 py-4 text-xs md:text-sm text-content-primary font-mono font-medium">
+                                <td class="px-2 md:px-6 py-4 text-xs md:text-sm text-content-primary font-mono font-medium">
                                     <span class="md:hidden">{{ number_format($item->nominal / 1000, 0) }}k</span>
                                     <span class="hidden md:inline">Rp {{ number_format($item->nominal, 0, ',', '.') }}</span>
                                     @if($item->status === 'sebagian')
@@ -210,7 +210,7 @@
                                         </p>
                                     @endif
                                 </td>
-                                <td class="px-3 md:px-6 py-4">
+                                <td class="px-2 md:px-6 py-4">
                                     @if($item->status === 'lunas')
                                         <span
                                             class="inline-flex items-center px-2 md:px-2.5 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-semibold bg-status-success/20 text-status-success whitespace-nowrap">
@@ -235,7 +235,7 @@
                                         </span>
                                     @endif
                                 </td>
-                                <td class="px-3 md:px-6 py-4 text-xs md:text-sm">
+                                <td class="px-2 md:px-6 py-4 text-xs md:text-sm">
                                     @if($jt)
                                         <div>
                                             <p class="text-content-secondary">{{ $jt->format('d/m/Y') }}</p>
@@ -255,10 +255,10 @@
                                         <span class="text-content-tertiary">—</span>
                                     @endif
                                 </td>
-                                <td class="px-3 md:px-6 py-4 text-xs md:text-sm text-content-secondary">
+                                <td class="px-2 md:px-6 py-4 text-xs md:text-sm text-content-secondary">
                                     {{ $item->tanggal_bayar ? $item->tanggal_bayar->format('d/m/Y') : '—' }}
                                 </td>
-                                <td class="px-3 md:px-6 py-4">
+                                <td class="pl-2 pr-4 md:px-6 py-4">
                                     <div class="flex items-center gap-1.5 md:gap-2">
                                         <button @click="openEdit({{ $item->toJson() }})"
                                             class="p-1 md:p-1.5 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-colors"
