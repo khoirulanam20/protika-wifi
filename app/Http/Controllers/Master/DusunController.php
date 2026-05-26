@@ -24,6 +24,7 @@ class DusunController extends Controller
         $data = $request->validate([
             'kecamatan' => 'required|string|max:100',
             'desa' => 'required|string|max:100',
+            'desa_kode' => 'nullable|string|max:13|exists:wilayah,kode',
             'dusun' => 'required|string|max:100',
         ]);
 
@@ -42,6 +43,7 @@ class DusunController extends Controller
         $data = $request->validate([
             'kecamatan' => 'required|string|max:100',
             'desa' => 'required|string|max:100',
+            'desa_kode' => 'nullable|string|max:13|exists:wilayah,kode',
             'dusun' => 'required|string|max:100',
         ]);
 

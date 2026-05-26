@@ -317,6 +317,7 @@
                         nama_pelanggan: '{{ old('nama_pelanggan') }}',
                         kecamatan: '{{ old('kecamatan') }}',
                         desa: '{{ old('desa') }}',
+                        desa_kode: '{{ old('desa_kode') }}',
                         dusun_id: '{{ old('dusun_id') }}',
                         bulanan_id: '{{ old('bulanan_id') }}',
                         kolektor_id: '{{ old('kolektor_id') }}',
@@ -329,21 +330,18 @@
                     dusunList: @json($dusun),
 
                     get filteredDusun() {
-                        if (!this.formData.desa) return [];
-                        const searchDesa = this.formData.desa.toUpperCase();
+                        if (!this.formData.desa_kode) return [];
                         return this.dusunList.filter(d =>
-                            d.desa && d.desa.toUpperCase() === searchDesa
+                            d.desa_kode === this.formData.desa_kode
                         );
                     },
 
                     init() {
-                        // Reset dusun_id saat desa berubah, kecuali jika nilainya sama (misal diupdate ulang oleh API)
-                        this.$watch('formData.desa', (newVal, oldVal) => {
-                            if (oldVal && newVal && oldVal.toUpperCase() === newVal.toUpperCase()) {
+                        // Reset dusun_id saat desa berubah (berdasarkan kode)
+                        this.$watch('formData.desa_kode', (newVal, oldVal) => {
+                            if (oldVal && newVal && oldVal === newVal) {
                                 return;
                             }
-
-                            // Hanya reset jika modal sedang terbuka dan oldVal bukan kosong (artinya user benar-benar mengganti desa)
                             if (this.showModal && oldVal) {
                                 this.formData.dusun_id = '';
                             }
@@ -355,7 +353,7 @@
                         this.formAction = '{{ route('master.pelanggan.store') }}';
                         this.formMethod = 'POST';
                         this.formData = {
-                            nama_pelanggan: '', kecamatan: '', desa: '', dusun_id: '',
+                            nama_pelanggan: '', kecamatan: '', desa: '', desa_kode: '', dusun_id: '',
                             bulanan_id: '', kolektor_id: '{{ auth()->user()->hasRole("kolektor") && !auth()->user()->hasRole("superadmin") ? auth()->user()->kolektor_id : "" }}', teknisi_id: '', status_alat: 'pinjam', tanggal_pemasangan: '',
                             kontak: '', lokasi: ''
                         };
@@ -376,6 +374,7 @@
                             nama_pelanggan: item.nama_pelanggan,
                             kecamatan: item.kecamatan || '',
                             desa: item.desa || '',
+                            desa_kode: '',
                             dusun_id: '', // Biarkan kosong dulu saat DOM re-render
                             bulanan_id: item.bulanan_id || '',
                             kolektor_id: item.kolektor_id || '',

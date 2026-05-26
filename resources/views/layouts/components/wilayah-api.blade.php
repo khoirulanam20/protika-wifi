@@ -1,5 +1,5 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4" 
-     x-data="wilayahData(formData.kecamatan, formData.desa)"
+     x-data="wilayahData(formData.kecamatan, formData.desa, formData.desa_kode)"
      x-init="initWilayah()">
     
     <div>
@@ -45,17 +45,18 @@
     {{-- Hidden Inputs for form submission --}}
     <input type="hidden" name="kecamatan" :value="kecName || initialKecamatan">
     <input type="hidden" name="desa" :value="desaName || initialDesa">
+    <input type="hidden" name="desa_kode" :value="desaKode || ''">
 </div>
 
 @push('scripts')
 @once
 <script>
 document.addEventListener('alpine:init', () => {
-    Alpine.data('wilayahData', (initKec = '', initDesa = '') => ({
+    Alpine.data('wilayahData', (initKec = '', initDesa = '', initDesaKode = '') => ({
         provinces: [], kabupatens: [], kecamatans: [], desas: [],
         selectedProv: '', selectedKab: '', selectedKec: '', selectedDesa: '',
-        kecName: '', desaName: '',
-        initialKecamatan: initKec, initialDesa: initDesa,
+        kecName: '', desaName: '', desaKode: '',
+        initialKecamatan: initKec, initialDesa: initDesa, initialDesaKode: initDesaKode,
 
         async initWilayah() {
             this.$watch('formData', (val) => {
@@ -75,6 +76,7 @@ document.addEventListener('alpine:init', () => {
                         if (this.formData) {
                             this.initialKecamatan = this.formData.kecamatan;
                             this.initialDesa = this.formData.desa;
+                            this.initialDesaKode = this.formData.desa_kode || '';
                         }
                         
                         if (this.mode === 'create') this.resetAll();
@@ -111,8 +113,14 @@ document.addEventListener('alpine:init', () => {
                     this.selectedKec = kec.id;
                     await this.fetchDesa(false);
                     
-                    // Cari desa berdasarkan nama
-                    const desa = this.desas.find(d => d.name.toUpperCase() === this.initialDesa.toUpperCase());
+                    // Cari desa berdasarkan kode dulu, baru nama
+                    let desa = null;
+                    if (this.initialDesaKode) {
+                        desa = this.desas.find(d => d.id === this.initialDesaKode);
+                    }
+                    if (!desa) {
+                        desa = this.desas.find(d => d.name.toUpperCase() === this.initialDesa.toUpperCase());
+                    }
                     if (desa) this.selectedDesa = desa.id;
                     this.updateHidden();
                     return;
@@ -182,6 +190,7 @@ document.addEventListener('alpine:init', () => {
             
             this.kecName = kec ? kec.name : '';
             this.desaName = desa ? desa.name : '';
+            this.desaKode = (desa && desa.id !== 'dummy_desa') ? desa.id : '';
             
             if (this.selectedDesa && this.selectedDesa !== 'dummy_desa') {
                 this.initialKecamatan = '';
@@ -191,11 +200,14 @@ document.addEventListener('alpine:init', () => {
             if (this.formData) {
                 this.formData.kecamatan = this.kecName || this.initialKecamatan;
                 this.formData.desa = this.desaName || this.initialDesa;
+                if (this.desaKode) {
+                    this.formData.desa_kode = this.desaKode;
+                }
             }
         },
         
         async resetAll() {
-            this.kecName = ''; this.desaName = '';
+            this.kecName = ''; this.desaName = ''; this.desaKode = '';
             this.initialKecamatan = ''; this.initialDesa = '';
             this.selectedKec = ''; this.selectedDesa = '';
             this.desas = []; this.kecamatans = [];

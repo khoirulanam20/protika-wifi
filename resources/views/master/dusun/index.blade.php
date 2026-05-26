@@ -11,13 +11,13 @@
         mode: 'create',
         formAction: '{{ route('master.dusun.store') }}',
         formMethod: 'POST',
-        formData: { kecamatan: '{{ old('kecamatan') }}', desa: '{{ old('desa') }}', dusun: '{{ old('dusun') }}' },
+        formData: { kecamatan: '{{ old('kecamatan') }}', desa: '{{ old('desa') }}', desa_kode: '{{ old('desa_kode') }}', dusun: '{{ old('dusun') }}' },
 
         openCreate() {
             this.mode = 'create';
             this.formAction = '{{ route('master.dusun.store') }}';
             this.formMethod = 'POST';
-            this.formData = { kecamatan: '', desa: '', dusun: '' };
+            this.formData = { kecamatan: '', desa: '', desa_kode: '', dusun: '' };
             this.showModal = true;
         },
         openEdit(item) {
@@ -27,6 +27,7 @@
             this.formData = { 
                 kecamatan: item.kecamatan, 
                 desa: item.desa, 
+                desa_kode: item.desa_kode, 
                 dusun: item.dusun 
             };
             this.showModal = true;
