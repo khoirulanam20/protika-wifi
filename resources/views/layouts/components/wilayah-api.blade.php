@@ -72,7 +72,6 @@ document.addEventListener('alpine:init', () => {
             this.$watch('showModal', (val) => {
                 if (val) {
                     this.$nextTick(() => {
-                        // Ensure we have the latest from formData if it was replaced entirely
                         if (this.formData) {
                             this.initialKecamatan = this.formData.kecamatan;
                             this.initialDesa = this.formData.desa;
@@ -85,7 +84,8 @@ document.addEventListener('alpine:init', () => {
             });
 
             try {
-                const res = await fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
+                // Load provinsi dari API lokal
+                const res = await fetch('/api/wilayah/provinces');
                 this.provinces = await res.json();
                 
                 if (this.initialKecamatan) {
@@ -97,28 +97,31 @@ document.addEventListener('alpine:init', () => {
         async setupEditData() {
             if (!this.initialKecamatan || !this.initialDesa) return;
             
-            // Smart Fast-Path for Temanggung (ID: 3323) in Jawa Tengah (ID: 33)
             try {
-                const res = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/3323.json`);
-                const districts = await res.json();
-                const dist = districts.find(d => d.name.toUpperCase() === this.initialKecamatan.toUpperCase());
+                // Default ke Jawa Tengah (33) & Temanggung (33.23)
+                this.selectedProv = '33';
+                await this.fetchKab(false);
+                this.selectedKab = '33.23';
+                await this.fetchKec(false);
                 
-                if (dist) {
-                    this.selectedProv = '33';
-                    await this.fetchKab(false); // fetch without clearing
-                    this.selectedKab = '3323';
-                    await this.fetchKec(false);
-                    this.selectedKec = dist.id;
+                // Cari kecamatan berdasarkan nama
+                const kec = this.kecamatans.find(k => k.name.toUpperCase() === this.initialKecamatan.toUpperCase());
+                
+                if (kec) {
+                    this.selectedKec = kec.id;
                     await this.fetchDesa(false);
                     
-                    const v = this.desas.find(d => d.name.toUpperCase() === this.initialDesa.toUpperCase());
-                    if (v) this.selectedDesa = v.id;
+                    // Cari desa berdasarkan nama
+                    const desa = this.desas.find(d => d.name.toUpperCase() === this.initialDesa.toUpperCase());
+                    if (desa) this.selectedDesa = desa.id;
                     this.updateHidden();
                     return;
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.error('Error setup edit data', e);
+            }
 
-            // Fallback for non-Temanggung: Use dummy options so it displays correctly
+            // Fallback untuk data lama
             if (!this.provinces.find(p => p.id === 'dummy_prov')) {
                 this.provinces.unshift({id: 'dummy_prov', name: '(Wilayah Lain - Pilih Ulang)'});
             }
@@ -140,7 +143,7 @@ document.addEventListener('alpine:init', () => {
             if (!this.selectedProv || this.selectedProv === 'dummy_prov') return;
             
             try {
-                const res = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${this.selectedProv}.json`);
+                const res = await fetch(`/api/wilayah/regencies/${this.selectedProv}`);
                 this.kabupatens = await res.json();
             } catch (e) { console.error(e); }
         },
@@ -154,7 +157,7 @@ document.addEventListener('alpine:init', () => {
             if (!this.selectedKab || this.selectedKab === 'dummy_kab') return;
             
             try {
-                const res = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${this.selectedKab}.json`);
+                const res = await fetch(`/api/wilayah/districts/${this.selectedKab}`);
                 this.kecamatans = await res.json();
             } catch (e) { console.error(e); }
         },
@@ -168,7 +171,7 @@ document.addEventListener('alpine:init', () => {
             if (!this.selectedKec || this.selectedKec === 'dummy_kec') return;
             
             try {
-                const res = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${this.selectedKec}.json`);
+                const res = await fetch(`/api/wilayah/villages/${this.selectedKec}`);
                 this.desas = await res.json();
             } catch (e) { console.error(e); }
         },
@@ -197,10 +200,10 @@ document.addEventListener('alpine:init', () => {
             this.selectedKec = ''; this.selectedDesa = '';
             this.desas = []; this.kecamatans = [];
 
-            // Default ke Jawa Tengah (33) & Temanggung (3323)
+            // Default ke Jawa Tengah (33) & Temanggung (33.23)
             this.selectedProv = '33';
             await this.fetchKab(false);
-            this.selectedKab = '3323';
+            this.selectedKab = '33.23';
             await this.fetchKec(false);
         }
     }));

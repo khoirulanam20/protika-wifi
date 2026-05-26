@@ -11,8 +11,17 @@ use App\Http\Controllers\Master\UserController;
 use App\Http\Controllers\Tagihan\TagihanController;
 use App\Http\Controllers\Tagihan\RekapController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Api\WilayahController;
 
 Route::get('/', fn() => redirect()->route('login'));
+
+// API Wilayah Routes
+Route::prefix('api/wilayah')->middleware(['auth'])->group(function () {
+    Route::get('/provinces', [WilayahController::class, 'provinces']);
+    Route::get('/regencies/{province}', [WilayahController::class, 'regencies']);
+    Route::get('/districts/{regency}', [WilayahController::class, 'districts']);
+    Route::get('/villages/{district}', [WilayahController::class, 'villages']);
+});
 
 require __DIR__ . '/auth.php';
 
