@@ -30,6 +30,12 @@
                                 class="px-6 py-3 text-left text-xs font-semibold text-content-tertiary uppercase tracking-wider">
                                 Wilayah</th>
                             <th
+                                class="px-6 py-3 text-right text-xs font-semibold text-content-tertiary uppercase tracking-wider">
+                                Jml Pelanggan</th>
+                            <th
+                                class="px-6 py-3 text-right text-xs font-semibold text-content-tertiary uppercase tracking-wider">
+                                Total Tagihan</th>
+                            <th
                                 class="px-6 py-3 text-left text-xs font-semibold text-content-tertiary uppercase tracking-wider">
                                 Alamat</th>
                             <th
@@ -50,6 +56,12 @@
                                     @else
                                         <span class="text-content-tertiary">—</span>
                                     @endif
+                                </td>
+                                <td class="px-6 py-4 text-sm text-content-primary font-medium text-right tabular-nums">
+                                    {{ number_format($item->pelanggan_count) }}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-content-secondary text-right tabular-nums">
+                                    Rp {{ number_format($item->tagihan_sum_nominal ?? 0, 0, ',', '.') }}
                                 </td>
                                 <td class="px-6 py-4 text-sm text-content-secondary truncate max-w-xs">
                                     {{ $item->alamat ?? '—' }}
@@ -92,7 +104,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-10 text-center text-content-tertiary">Belum ada data kolektor.
+                                <td colspan="7" class="px-6 py-10 text-center text-content-tertiary">Belum ada data kolektor.
                                 </td>
                             </tr>
                         @endforelse

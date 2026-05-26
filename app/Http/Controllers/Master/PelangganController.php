@@ -31,12 +31,21 @@ class PelangganController extends Controller
             $q->where('nama_pelanggan', 'like', "%$v%");
         })->when($request->kecamatan, function($q, $v) {
             $q->where('kecamatan', $v);
+        })->when($request->desa, function($q, $v) {
+            $q->where('desa', $v);
         })->when($request->status_alat, function($q, $v) {
             $q->where('status_alat', $v);
         });
 
+        if (!auth()->user()->hasRole('kolektor')) {
+            $query->when($request->kolektor_id, function($q, $v) {
+                $q->where('kolektor_id', $v);
+            });
+        }
+
         $pelanggan = $query->latest()->paginate(20)->withQueryString();
         $kecamatanList = MasterPelanggan::distinct()->pluck('kecamatan')->filter()->toArray();
+        $desaList = MasterPelanggan::distinct()->pluck('desa')->filter()->toArray();
 
         $dusun   = MasterDusun::all();
         $bulanan = MasterBulanan::all();
@@ -51,7 +60,7 @@ class PelangganController extends Controller
         $penagih = MasterPenagih::all();
 
         return view('master.pelanggan.index', compact(
-            'pelanggan', 'kecamatanList', 'dusun', 'bulanan', 'kolektor', 'teknisi', 'penagih'
+            'pelanggan', 'kecamatanList', 'desaList', 'dusun', 'bulanan', 'kolektor', 'teknisi', 'penagih'
         ));
     }
 

@@ -13,7 +13,10 @@ class KolektorController extends Controller
 {
     public function index()
     {
-        $kolektor = MasterKolektor::with('user')->latest()->paginate(20);
+        $kolektor = MasterKolektor::with('user')
+            ->withCount('pelanggan')
+            ->withSum('tagihan', 'nominal')
+            ->latest()->paginate(20);
         return view('master.kolektor.index', compact('kolektor'));
     }
 

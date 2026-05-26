@@ -34,13 +34,27 @@
                         <option value="{{ $kec }}" {{ request('kecamatan') == $kec ? 'selected' : '' }}>{{ $kec }}</option>
                     @endforeach
                 </select>
+                <select name="desa" class="input-field w-44">
+                    <option value="">Semua Desa</option>
+                    @foreach($desaList as $ds)
+                        <option value="{{ $ds }}" {{ request('desa') == $ds ? 'selected' : '' }}>{{ $ds }}</option>
+                    @endforeach
+                </select>
+                @role('superadmin')
+                <select name="kolektor_id" class="input-field w-40">
+                    <option value="">Semua Kolektor</option>
+                    @foreach($kolektor as $kol)
+                        <option value="{{ $kol->id }}" {{ request('kolektor_id') == $kol->id ? 'selected' : '' }}>{{ $kol->nama_kolektor }}</option>
+                    @endforeach
+                </select>
+                @endrole
                 <select name="status_alat" class="input-field w-36">
                     <option value="">Semua Alat</option>
                     <option value="beli" {{ request('status_alat') == 'beli' ? 'selected' : '' }}>Beli</option>
                     <option value="pinjam" {{ request('status_alat') == 'pinjam' ? 'selected' : '' }}>Pinjam</option>
                 </select>
                 <button type="submit" class="btn-primary px-5">Filter</button>
-                @if(request()->hasAny(['search', 'kecamatan', 'status_alat']))
+                @if(request()->hasAny(['search', 'kecamatan', 'desa', 'kolektor_id', 'status_alat']))
                     <a href="{{ route('master.pelanggan.index') }}" class="btn-secondary px-5">Reset</a>
                 @endif
             </form>
