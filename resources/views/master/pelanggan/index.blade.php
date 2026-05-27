@@ -370,12 +370,14 @@
                             formattedDate = new Date(item.tanggal_pemasangan).toISOString().split('T')[0];
                         }
 
+                        const dusun = this.dusunList.find(d => d.id == item.dusun_id);
+
                         this.formData = {
                             nama_pelanggan: item.nama_pelanggan,
                             kecamatan: item.kecamatan || '',
                             desa: item.desa || '',
-                            desa_kode: '',
-                            dusun_id: '', // Biarkan kosong dulu saat DOM re-render
+                            desa_kode: dusun ? dusun.desa_kode : '',
+                            dusun_id: '',
                             bulanan_id: item.bulanan_id || '',
                             kolektor_id: item.kolektor_id || '',
                             teknisi_id: item.teknisi_id || '',
@@ -385,8 +387,6 @@
                             lokasi: item.lokasi || ''
                         };
 
-                        // Gunakan $nextTick agar DOM <option> dari wilayah selesai di-render
-                        // sebelum x-model mencoba memilih dusun_id-nya.
                         this.$nextTick(() => {
                             this.formData.dusun_id = item.dusun_id || '';
                         });
