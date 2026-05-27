@@ -95,7 +95,8 @@
                                 </td>
                                 <td class="px-6 py-4 text-sm text-content-primary font-medium">{{ $item->nama_pelanggan }}</td>
                                 <td class="px-6 py-4 text-sm text-content-secondary">
-                                    {{ $item->desa }}, {{ $item->kecamatan }}
+                                    {{ $item->kecamatan }}, {{ $item->desa }}<br>
+                                    <span class="text-content-tertiary text-[11px]">{{ $item->dusun?->dusun ?? '—' }}</span>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-content-secondary">
                                     @if($item->bulanan)
@@ -143,7 +144,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-12 text-center text-content-tertiary text-sm">
+                                    <td colspan="7" class="px-6 py-12 text-center text-content-tertiary text-sm">
                                     Belum ada data pelanggan.
                                 </td>
                             </tr>
