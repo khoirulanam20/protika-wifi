@@ -44,6 +44,7 @@ class TagihanTerbayarNotification extends Notification
             'type' => 'tagihan_terbayar',
             'title' => 'Tagihan Terbayar (' . $statusText . ')',
             'message' => 'Tagihan ' . $this->tagihan->pelanggan->nama_pelanggan . ' telah dibayar ' . $statusText,
+            'kolektor' => $this->tagihan->kolektor?->nama_kolektor,
             'url' => route('tagihan.index', ['search' => $this->tagihan->pelanggan->nama_pelanggan]),
         ];
     }

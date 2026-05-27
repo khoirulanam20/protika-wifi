@@ -91,28 +91,38 @@
                 
                 initNotifications(userId) {
                     this.fetchNotifications();
+                    const self = this;
                     setTimeout(() => {
                         if (window.Echo) {
                             window.Echo.private(`App.Models.User.${userId}`)
                                 .notification((notification) => {
-                                    this.notifications.unshift({
+                                    if (!notification) return;
+                                    const exists = self.notifications.some(n => n.id === notification.id);
+                                    if (exists) return;
+                                    self.notifications.unshift({
                                         id: notification.id,
                                         data: notification,
                                         created_at: new Date().toISOString(),
                                         read_at: null
                                     });
-                                    this.unreadCount++;
+                                    self.unreadCount++;
                                     
-                                    // Browser notification or native alert
+                                    // Only show ONE browser notification per unique notification
+                                    if (window.__lastNotifId === notification.id) return;
+                                    window.__lastNotifId = notification.id;
+                                    
+                                    let body = notification.message;
+                                    if (notification.kolektor) {
+                                        body += '\nKolektor: ' + notification.kolektor;
+                                    }
                                     if(Notification.permission === 'granted') {
-                                        new Notification(notification.title, { body: notification.message });
+                                        new Notification(notification.title, { body });
                                     } else {
-                                        // simple native alert as fallback
-                                        alert(`${notification.title}\n${notification.message}`);
+                                        alert(`${notification.title}\n${body}`);
                                     }
                                 });
                         }
-                    }, 1000); // Wait for Echo to be ready
+                    }, 1000);
                 }
             }
         }

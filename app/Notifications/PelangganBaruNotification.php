@@ -43,6 +43,7 @@ class PelangganBaruNotification extends Notification
             'type' => 'pelanggan_baru',
             'title' => 'Pelanggan Baru',
             'message' => 'Pelanggan baru ditambahkan: ' . $this->pelanggan->nama_pelanggan,
+            'kolektor' => $this->pelanggan->kolektor?->nama_kolektor,
             'url' => route('master.pelanggan.index', ['search' => $this->pelanggan->nama_pelanggan]),
         ];
     }

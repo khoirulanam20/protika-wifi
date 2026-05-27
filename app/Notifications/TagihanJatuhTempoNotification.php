@@ -43,6 +43,7 @@ class TagihanJatuhTempoNotification extends Notification
             'type' => 'tagihan_jatuh_tempo',
             'title' => 'Tagihan Jatuh Tempo',
             'message' => 'Tagihan bulan ' . $this->tagihan->bulan . '/' . $this->tagihan->tahun . ' untuk ' . $this->tagihan->pelanggan->nama_pelanggan . ' telah jatuh tempo.',
+            'kolektor' => $this->tagihan->kolektor?->nama_kolektor,
             'url' => route('tagihan.index', ['search' => $this->tagihan->pelanggan->nama_pelanggan, 'status' => 'belum_lunas']),
         ];
     }

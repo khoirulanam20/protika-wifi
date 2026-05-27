@@ -104,6 +104,7 @@
                                 <a :href="notif.data.url" @click="markAsRead(notif.id)" class="block pr-5">
                                     <div class="font-semibold text-xs text-content-primary" x-text="notif.data.title"></div>
                                     <div class="text-[11px] text-content-secondary mt-0.5" x-text="notif.data.message"></div>
+                                    <div class="text-[10px] text-primary/70 mt-0.5" x-show="notif.data.kolektor" x-text="'Kolektor: ' + notif.data.kolektor"></div>
                                     <div class="text-[9px] text-gray-400 mt-0.5" x-text="new Date(notif.created_at).toLocaleString('id-ID')"></div>
                                 </a>
                                 <button @click.stop="deleteNotification(notif.id)" class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-status-danger hover:bg-red-50 rounded-md transition-colors opacity-0 group-hover:opacity-100" title="Hapus">
@@ -156,6 +157,7 @@
                                 <a :href="notif.data.url" @click="markAsRead(notif.id)" class="block pr-6">
                                     <div class="font-semibold text-sm text-content-primary" x-text="notif.data.title"></div>
                                     <div class="text-xs text-content-secondary mt-1" x-text="notif.data.message"></div>
+                                    <div class="text-[11px] text-primary/70 mt-0.5" x-show="notif.data.kolektor" x-text="'Kolektor: ' + notif.data.kolektor"></div>
                                     <div class="text-[10px] text-gray-400 mt-1" x-text="new Date(notif.created_at).toLocaleString('id-ID')"></div>
                                 </a>
                                 <button @click.stop="deleteNotification(notif.id)" class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-status-danger hover:bg-red-50 rounded-md transition-colors opacity-0 group-hover:opacity-100" title="Hapus notifikasi">
