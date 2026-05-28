@@ -93,6 +93,10 @@
             <div>
                 <p class="text-xs font-semibold text-content-tertiary uppercase tracking-wider mb-2">Akun</p>
                 <div class="space-y-1">
+                    <a href="{{ route('profile.edit') }}"
+                        class="block px-3 py-2 rounded-lg text-sm {{ request()->routeIs('profile.*') ? 'text-primary bg-primary/5' : 'text-content-secondary hover:bg-primary/5 hover:text-primary' }}">
+                        Profil Saya
+                    </a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="w-full text-left px-3 py-2 rounded-lg text-sm text-status-danger hover:bg-red-50 flex items-center gap-2">

@@ -60,7 +60,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Notification Routes
     Route::get('/api/notifications', function(Illuminate\Http\Request $request) {
-        return response()->json($request->user()->notifications()->take(10)->get());
+        return response()->json($request->user()->notifications()->latest()->get());
     })->name('notifications.index');
     
     Route::post('/api/notifications/{id}/read', function(Illuminate\Http\Request $request, $id) {
