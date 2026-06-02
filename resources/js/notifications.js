@@ -1,6 +1,7 @@
 /**
  * Alpine notification dropdown — lazy init on first bell click.
  */
+import Alpine from 'alpinejs';
 import { ensureEcho } from './echo';
 
 export function registerNotificationDropdown() {
