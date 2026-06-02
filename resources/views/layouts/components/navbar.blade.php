@@ -79,8 +79,8 @@
         {{-- Right Actions Mobile --}}
         <div class="flex md:hidden items-center gap-2">
             <!-- Notifications Dropdown Mobile -->
-            <div class="relative" x-data="notificationDropdown()" x-init="initNotifications({{ auth()->id() }})" @click.away="open = false">
-                <button @click="open = !open" class="p-2 text-content-tertiary hover:text-content-primary transition-colors relative">
+            <div class="relative" x-data="notificationDropdown()" data-user-id="{{ auth()->id() }}" @click.away="open = false">
+                <button @click="handleBellClick(); requestNotificationPermission()" class="p-2 text-content-tertiary hover:text-content-primary transition-colors relative">
                     <div x-show="unreadCount > 0" x-text="unreadCount" class="absolute top-0 right-0 flex items-center justify-center min-w-[1.1rem] h-[1.1rem] px-0.5 text-[9px] font-bold text-white bg-status-danger rounded-full border-2 border-white transform translate-x-1/4 -translate-y-1/4"></div>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -132,8 +132,8 @@
                 </svg>
             </button>
             <!-- Notifications Dropdown -->
-            <div class="relative" x-data="notificationDropdown()" x-init="initNotifications({{ auth()->id() }})" @click.away="open = false">
-                <button @click="open = !open" class="p-2 text-content-tertiary hover:text-content-primary transition-colors relative">
+            <div class="relative" x-data="notificationDropdown()" data-user-id="{{ auth()->id() }}" @click.away="open = false">
+                <button @click="handleBellClick(); requestNotificationPermission()" class="p-2 text-content-tertiary hover:text-content-primary transition-colors relative">
                     <div x-show="unreadCount > 0" x-text="unreadCount" class="absolute top-0 right-0 flex items-center justify-center min-w-[1.2rem] h-[1.2rem] px-1 text-[10px] font-bold text-white bg-status-danger rounded-full border-2 border-white transform translate-x-1/4 -translate-y-1/4"></div>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

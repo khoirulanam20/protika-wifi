@@ -10,7 +10,13 @@ class MasterPelanggan extends Model
     protected $fillable = [
         'nama_pelanggan', 'kecamatan', 'desa', 'dusun_id', 'bulanan_id',
         'tanggal_pemasangan', 'kolektor_id', 'teknisi_id', 'penagih_id', 'status_alat',
-        'kontak', 'lokasi'
+        'is_active', 'nonaktif_at', 'aktif_kembali_at', 'kontak', 'lokasi'
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'nonaktif_at' => 'datetime',
+        'aktif_kembali_at' => 'datetime',
     ];
 
     public function dusun()    { return $this->belongsTo(MasterDusun::class, 'dusun_id'); }

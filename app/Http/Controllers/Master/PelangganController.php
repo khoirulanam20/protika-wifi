@@ -21,9 +21,10 @@ class PelangganController extends Controller
 {
     public function index(Request $request)
     {
+        $isKolektorOnly = auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin');
         $query = MasterPelanggan::with(['dusun', 'bulanan', 'kolektor', 'teknisi', 'penagih']);
-        
-        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
+
+        if ($isKolektorOnly) {
             $query->where('kolektor_id', auth()->user()->kolektor_id);
         }
 
@@ -33,26 +34,87 @@ class PelangganController extends Controller
             $q->where('kecamatan', $v);
         })->when($request->desa, function($q, $v) {
             $q->where('desa', $v);
+        })->when($request->dusun_id, function($q, $v) {
+            $q->where('dusun_id', $v);
         })->when($request->status_alat, function($q, $v) {
             $q->where('status_alat', $v);
         });
 
-        if (!auth()->user()->hasRole('kolektor')) {
+        if (!$isKolektorOnly) {
             $query->when($request->kolektor_id, function($q, $v) {
                 $q->where('kolektor_id', $v);
             });
         }
 
-        $pelanggan = $query->latest()->paginate(20)->withQueryString();
-        $kecamatanList = MasterPelanggan::distinct()->pluck('kecamatan')->filter()->toArray();
-        $desaList = MasterPelanggan::distinct()->pluck('desa')->filter()->toArray();
+        if ($request->sort_nama === 'nama_asc') {
+            $query->orderBy('nama_pelanggan', 'asc');
+        } elseif ($request->sort_nama === 'nama_desc') {
+            $query->orderBy('nama_pelanggan', 'desc');
+        } else {
+            $query->latest();
+        }
+
+        $pelanggan = $query->paginate(20)->withQueryString();
+
+        $scopeQuery = MasterPelanggan::query();
+        if ($isKolektorOnly) {
+            $scopeQuery->where('kolektor_id', auth()->user()->kolektor_id);
+        } elseif ($request->kolektor_id) {
+            $scopeQuery->where('kolektor_id', $request->kolektor_id);
+        }
+
+        $kecamatanList = (clone $scopeQuery)
+            ->select('kecamatan')
+            ->whereNotNull('kecamatan')
+            ->distinct()
+            ->orderBy('kecamatan')
+            ->pluck('kecamatan')
+            ->filter()
+            ->values()
+            ->toArray();
+
+        $desaOptions = (clone $scopeQuery)
+            ->select('kecamatan', 'desa')
+            ->whereNotNull('kecamatan')
+            ->whereNotNull('desa')
+            ->distinct()
+            ->orderBy('kecamatan')
+            ->orderBy('desa')
+            ->get()
+            ->map(fn ($row) => [
+                'kecamatan' => $row->kecamatan,
+                'desa' => $row->desa,
+            ])
+            ->values();
+
+        $dusunOptionsQuery = MasterDusun::query()
+            ->select('id', 'dusun', 'desa', 'kecamatan');
+
+        if (!empty($kecamatanList)) {
+            $dusunOptionsQuery->whereIn('kecamatan', $kecamatanList);
+        } else {
+            $dusunOptionsQuery->whereRaw('1 = 0');
+        }
+
+        $dusunOptions = $dusunOptionsQuery
+            ->orderBy('kecamatan')
+            ->orderBy('desa')
+            ->orderBy('dusun')
+            ->get()
+            ->map(fn ($row) => [
+                'id' => $row->id,
+                'dusun' => $row->dusun,
+                'desa' => $row->desa,
+                'kecamatan' => $row->kecamatan,
+            ])
+            ->values();
 
         $dusun   = MasterDusun::all();
         $bulanan = MasterBulanan::all();
         $teknisi = MasterTeknisi::all();
         $penagih = MasterPenagih::all();
         
-        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
+        if ($isKolektorOnly) {
             $kolektor = MasterKolektor::where('id', auth()->user()->kolektor_id)->get();
         } else {
             $kolektor = MasterKolektor::all();
@@ -60,7 +122,15 @@ class PelangganController extends Controller
         $penagih = MasterPenagih::all();
 
         return view('master.pelanggan.index', compact(
-            'pelanggan', 'kecamatanList', 'desaList', 'dusun', 'bulanan', 'kolektor', 'teknisi', 'penagih'
+            'pelanggan',
+            'kecamatanList',
+            'desaOptions',
+            'dusunOptions',
+            'dusun',
+            'bulanan',
+            'kolektor',
+            'teknisi',
+            'penagih'
         ));
     }
 
@@ -93,6 +163,7 @@ class PelangganController extends Controller
             'teknisi_id'        => 'nullable|exists:master_teknisi,id',
             'penagih_id'        => 'nullable|exists:master_penagih,id',
             'status_alat'       => 'required|in:beli,pinjam',
+            'is_active'         => 'nullable|boolean',
             'kontak'            => 'nullable|string|max:50',
             'lokasi'            => 'nullable|string',
         ]);
@@ -100,6 +171,8 @@ class PelangganController extends Controller
         if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
             $data['kolektor_id'] = auth()->user()->kolektor_id;
         }
+        $data['is_active'] = $request->boolean('is_active', true);
+        $data = $this->applyActiveStatusTransition($data);
 
         if (MasterPelanggan::where('nama_pelanggan', $data['nama_pelanggan'])
             ->where('kolektor_id', $data['kolektor_id'])
@@ -155,6 +228,7 @@ class PelangganController extends Controller
             'teknisi_id'        => 'nullable|exists:master_teknisi,id',
             'penagih_id'        => 'nullable|exists:master_penagih,id',
             'status_alat'       => 'required|in:beli,pinjam',
+            'is_active'         => 'nullable|boolean',
             'kontak'            => 'nullable|string|max:50',
             'lokasi'            => 'nullable|string',
         ]);
@@ -162,6 +236,8 @@ class PelangganController extends Controller
         if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
             $data['kolektor_id'] = auth()->user()->kolektor_id;
         }
+        $data['is_active'] = $request->boolean('is_active', true);
+        $data = $this->applyActiveStatusTransition($data, $pelanggan);
 
         if (MasterPelanggan::where('nama_pelanggan', $data['nama_pelanggan'])
             ->where('kolektor_id', $data['kolektor_id'])
@@ -187,6 +263,39 @@ class PelangganController extends Controller
         return redirect()->route('master.pelanggan.index')->with('success', 'Pelanggan berhasil dihapus.');
     }
 
+    public function nonaktifkan(MasterPelanggan $pelanggan)
+    {
+        $this->authorizePelangganAccess($pelanggan);
+
+        if (!$pelanggan->is_active) {
+            return redirect()->route('master.pelanggan.index')->with('info', 'Pelanggan sudah berstatus nonaktif.');
+        }
+
+        $pelanggan->update([
+            'is_active' => false,
+            'nonaktif_at' => now(),
+            'aktif_kembali_at' => null,
+        ]);
+
+        return redirect()->route('master.pelanggan.index')->with('success', 'Pelanggan berhasil dinonaktifkan.');
+    }
+
+    public function aktifkan(MasterPelanggan $pelanggan)
+    {
+        $this->authorizePelangganAccess($pelanggan);
+
+        if ($pelanggan->is_active) {
+            return redirect()->route('master.pelanggan.index')->with('info', 'Pelanggan sudah berstatus aktif.');
+        }
+
+        $pelanggan->update([
+            'is_active' => true,
+            'aktif_kembali_at' => now(),
+        ]);
+
+        return redirect()->route('master.pelanggan.index')->with('success', 'Pelanggan berhasil diaktifkan kembali.');
+    }
+
     /**
      * Buat tagihan otomatis untuk bulan berjalan.
      * Nominal diambil dari paket bulanan pelanggan.
@@ -194,6 +303,10 @@ class PelangganController extends Controller
      */
     private function buatTagihanOtomatis(MasterPelanggan $pelanggan): void
     {
+        if (!$pelanggan->is_active) {
+            return;
+        }
+
         $now     = Carbon::now();
         $bulan   = (int) $now->month;
         $tahun   = (int) $now->year;
@@ -213,5 +326,40 @@ class PelangganController extends Controller
                 'created_by'  => auth()->id(),
             ]
         );
+    }
+
+    private function applyActiveStatusTransition(array $data, ?MasterPelanggan $current = null): array
+    {
+        $isActive = (bool) ($data['is_active'] ?? true);
+
+        if (!$current) {
+            if ($isActive) {
+                $data['nonaktif_at'] = null;
+                $data['aktif_kembali_at'] = null;
+            } else {
+                $data['nonaktif_at'] = now();
+                $data['aktif_kembali_at'] = null;
+            }
+
+            return $data;
+        }
+
+        if ($current->is_active && !$isActive) {
+            $data['nonaktif_at'] = now();
+            $data['aktif_kembali_at'] = null;
+        } elseif (!$current->is_active && $isActive) {
+            $data['aktif_kembali_at'] = now();
+        }
+
+        return $data;
+    }
+
+    private function authorizePelangganAccess(MasterPelanggan $pelanggan): void
+    {
+        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
+            if ($pelanggan->kolektor_id !== auth()->user()->kolektor_id) {
+                abort(403, 'Anda tidak memiliki akses ke pelanggan ini.');
+            }
+        }
     }
 }

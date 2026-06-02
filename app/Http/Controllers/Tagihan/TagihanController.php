@@ -218,7 +218,13 @@ class TagihanController extends Controller
         $bulan = $now->month;
         $tahun = $now->year;
 
-        $query = MasterPelanggan::with('bulanan')->whereNotNull('kolektor_id');
+        $query = MasterPelanggan::with('bulanan')
+            ->whereNotNull('kolektor_id')
+            ->where('is_active', true)
+            ->where(function ($q) use ($now) {
+                $q->whereNull('aktif_kembali_at')
+                    ->orWhereDate('aktif_kembali_at', '<=', $now->toDateString());
+            });
 
         if ($user->hasRole('kolektor')) {
             $query->where('kolektor_id', $user->kolektor_id);

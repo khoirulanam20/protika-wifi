@@ -36,6 +36,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware(['role:superadmin|kolektor'])->prefix('master')->name('master.')->group(function () {
         Route::resource('pelanggan',  PelangganController::class);
+        Route::post('pelanggan/{pelanggan}/nonaktif', [PelangganController::class, 'nonaktifkan'])->name('pelanggan.nonaktif');
+        Route::post('pelanggan/{pelanggan}/aktifkan', [PelangganController::class, 'aktifkan'])->name('pelanggan.aktifkan');
         Route::resource('dusun',      DusunController::class);
         Route::resource('bulanan',    BulanController::class);
 

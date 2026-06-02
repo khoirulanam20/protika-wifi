@@ -25,38 +25,62 @@
             </div>
 
             {{-- Filter Bar --}}
-            <form method="GET" class="px-6 py-4 border-b border-border flex flex-wrap gap-3 bg-base-page">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama pelanggan..."
-                    class="input-field flex-1 min-w-48" />
-                <select name="kecamatan" class="input-field w-44">
-                    <option value="">Semua Kecamatan</option>
-                    @foreach($kecamatanList as $kec)
-                        <option value="{{ $kec }}" {{ request('kecamatan') == $kec ? 'selected' : '' }}>{{ $kec }}</option>
-                    @endforeach
-                </select>
-                <select name="desa" class="input-field w-44">
-                    <option value="">Semua Desa</option>
-                    @foreach($desaList as $ds)
-                        <option value="{{ $ds }}" {{ request('desa') == $ds ? 'selected' : '' }}>{{ $ds }}</option>
-                    @endforeach
-                </select>
-                @role('superadmin')
-                <select name="kolektor_id" class="input-field w-40">
-                    <option value="">Semua Kolektor</option>
-                    @foreach($kolektor as $kol)
-                        <option value="{{ $kol->id }}" {{ request('kolektor_id') == $kol->id ? 'selected' : '' }}>{{ $kol->nama_kolektor }}</option>
-                    @endforeach
-                </select>
-                @endrole
-                <select name="status_alat" class="input-field w-36">
-                    <option value="">Semua Alat</option>
-                    <option value="beli" {{ request('status_alat') == 'beli' ? 'selected' : '' }}>Beli</option>
-                    <option value="pinjam" {{ request('status_alat') == 'pinjam' ? 'selected' : '' }}>Pinjam</option>
-                </select>
-                <button type="submit" class="btn-primary px-5">Filter</button>
-                @if(request()->hasAny(['search', 'kecamatan', 'desa', 'kolektor_id', 'status_alat']))
-                    <a href="{{ route('master.pelanggan.index') }}" class="btn-secondary px-5">Reset</a>
-                @endif
+            <form method="GET" class="px-4 sm:px-6 py-4 border-b border-border bg-base-page">
+                <div class="grid grid-cols-1 gap-3">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama pelanggan..."
+                        class="input-field w-full" />
+
+                    <div class="grid grid-cols-2 gap-3 md:flex md:flex-wrap md:items-end md:gap-3">
+                        <select name="kecamatan" x-model="filterData.kecamatan"
+                            class="input-field w-full min-w-0 md:flex-1 md:min-w-[9rem] md:max-w-[11rem]">
+                            <option value="">Semua Kecamatan</option>
+                            @foreach($kecamatanList as $kec)
+                                <option value="{{ $kec }}" {{ request('kecamatan') == $kec ? 'selected' : '' }}>{{ $kec }}</option>
+                            @endforeach
+                        </select>
+                        <select name="desa" x-model="filterData.desa"
+                            class="input-field w-full min-w-0 md:flex-1 md:min-w-[9rem] md:max-w-[11rem]">
+                            <option value="">Semua Desa</option>
+                            <template x-for="ds in filteredFilterDesaList" :key="ds">
+                                <option :value="ds" x-text="ds"></option>
+                            </template>
+                        </select>
+                        <select name="dusun_id" x-model="filterData.dusun_id"
+                            class="input-field w-full min-w-0 md:flex-1 md:min-w-[9rem] md:max-w-[11rem]">
+                            <option value="">Semua Dusun</option>
+                            <template x-for="d in filteredFilterDusunList" :key="d.id">
+                                <option :value="String(d.id)" x-text="d.dusun"></option>
+                            </template>
+                        </select>
+                        @role('superadmin')
+                        <select name="kolektor_id"
+                            class="input-field w-full min-w-0 md:flex-1 md:min-w-[9rem] md:max-w-[11rem]">
+                            <option value="">Semua Kolektor</option>
+                            @foreach($kolektor as $kol)
+                                <option value="{{ $kol->id }}" {{ request('kolektor_id') == $kol->id ? 'selected' : '' }}>{{ $kol->nama_kolektor }}</option>
+                            @endforeach
+                        </select>
+                        @endrole
+                        <select name="status_alat"
+                            class="input-field w-full min-w-0 md:flex-1 md:min-w-[9rem] md:max-w-[11rem]">
+                            <option value="">Semua Alat</option>
+                            <option value="beli" {{ request('status_alat') == 'beli' ? 'selected' : '' }}>Beli</option>
+                            <option value="pinjam" {{ request('status_alat') == 'pinjam' ? 'selected' : '' }}>Pinjam</option>
+                        </select>
+                        <div class="col-span-2 flex gap-3 md:col-span-1 md:flex-shrink-0 md:ml-auto">
+                            <button type="submit"
+                                class="btn-primary flex-1 md:flex-none md:px-6 inline-flex items-center justify-center whitespace-nowrap">
+                                Filter
+                            </button>
+                            @if(request()->hasAny(['search', 'kecamatan', 'desa', 'dusun_id', 'kolektor_id', 'status_alat', 'sort_nama']))
+                                <a href="{{ route('master.pelanggan.index') }}"
+                                    class="btn-secondary flex-1 md:flex-none md:px-6 inline-flex items-center justify-center whitespace-nowrap">
+                                    Reset
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
             </form>
 
             {{-- Table --}}
@@ -69,7 +93,25 @@
                                 ID</th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-semibold text-content-tertiary uppercase tracking-wider">
-                                Nama</th>
+                                <a href="{{ route('master.pelanggan.index', array_merge(request()->query(), ['sort_nama' => request('sort_nama') === 'nama_asc' ? 'nama_desc' : 'nama_asc'])) }}"
+                                    class="inline-flex items-center gap-1.5 hover:text-content-primary transition-colors"
+                                    title="Urutkan nama pelanggan">
+                                    <span>Nama</span>
+                                    @if(request('sort_nama') === 'nama_asc')
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                                        </svg>
+                                    @elseif(request('sort_nama') === 'nama_desc')
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    @else
+                                        <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8" />
+                                        </svg>
+                                    @endif
+                                </a>
+                            </th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-semibold text-content-tertiary uppercase tracking-wider">
                                 Wilayah</th>
@@ -82,6 +124,9 @@
                             <th
                                 class="px-6 py-3 text-left text-xs font-semibold text-content-tertiary uppercase tracking-wider">
                                 Alat</th>
+                            <th
+                                class="px-6 py-3 text-left text-xs font-semibold text-content-tertiary uppercase tracking-wider">
+                                Status</th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-semibold text-content-tertiary uppercase tracking-wider">
                                 Aksi</th>
@@ -117,8 +162,42 @@
                                             class="px-2.5 py-1 rounded-full text-xs font-semibold bg-status-info/20 text-status-info">Pinjam</span>
                                     @endif
                                 </td>
+                                <td class="px-6 py-4 text-sm">
+                                    @if($item->is_active)
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-status-success/20 text-status-success">Aktif</span>
+                                        @if($item->aktif_kembali_at)
+                                            <p class="text-[11px] text-content-tertiary mt-1">Aktif lagi: {{ $item->aktif_kembali_at->format('d M Y H:i') }}</p>
+                                        @endif
+                                    @else
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-status-danger/20 text-status-danger">Nonaktif</span>
+                                        @if($item->nonaktif_at)
+                                            <p class="text-[11px] text-content-tertiary mt-1">Nonaktif sejak: {{ $item->nonaktif_at->format('d M Y H:i') }}</p>
+                                        @endif
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-2">
+                                        @if($item->is_active)
+                                            <button type="button"
+                                                @click="openStatusModal('{{ route('master.pelanggan.nonaktif', $item) }}', 'Nonaktifkan', '{{ $item->nama_pelanggan }}')"
+                                                class="p-1.5 rounded-lg bg-status-danger/10 text-status-danger hover:bg-status-danger/20 transition-colors"
+                                                title="Nonaktifkan">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728" />
+                                                </svg>
+                                            </button>
+                                        @else
+                                            <button type="button"
+                                                @click="openStatusModal('{{ route('master.pelanggan.aktifkan', $item) }}', 'Aktifkan', '{{ $item->nama_pelanggan }}')"
+                                                class="p-1.5 rounded-lg bg-status-success/10 text-status-success hover:bg-status-success/20 transition-colors"
+                                                title="Aktifkan">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </button>
+                                        @endif
                                         <button @click="openEdit({{ $item->toJson() }})"
                                             class="p-1.5 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-colors"
                                             title="Edit">
@@ -144,7 +223,7 @@
                             </tr>
                         @empty
                             <tr>
-                                    <td colspan="7" class="px-6 py-12 text-center text-content-tertiary text-sm">
+                                    <td colspan="8" class="px-6 py-12 text-center text-content-tertiary text-sm">
                                     Belum ada data pelanggan.
                                 </td>
                             </tr>
@@ -267,7 +346,7 @@
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
                                         <label class="block text-content-secondary text-sm mb-2">Tanggal Pasang</label>
                                         <input type="date" name="tanggal_pemasangan" x-model="formData.tanggal_pemasangan"
@@ -279,6 +358,13 @@
                                             required>
                                             <option value="pinjam">Pinjam</option>
                                             <option value="beli">Beli</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-content-secondary text-sm mb-2">Status Pelanggan</label>
+                                        <select name="is_active" x-model="formData.is_active" class="input-field">
+                                            <option value="1">Aktif</option>
+                                            <option value="0">Nonaktif</option>
                                         </select>
                                     </div>
                                 </div>
@@ -301,6 +387,31 @@
                 </form>
             </div>
         </div>
+
+        {{-- Modal Konfirmasi Status --}}
+        <div x-show="showStatusModal" class="fixed inset-0 z-[60] overflow-y-auto px-4 pt-10 pb-24" style="display: none;">
+            <div x-show="showStatusModal" x-transition.opacity class="fixed inset-0 bg-content-primary/40 backdrop-blur-sm"
+                @click="showStatusModal = false"></div>
+            <div x-show="showStatusModal" x-transition
+                class="relative bg-white rounded-xl shadow-modal w-full max-w-md mx-auto z-10 overflow-hidden">
+                <div class="px-6 py-4 border-b border-border bg-base-page">
+                    <h3 class="text-base font-semibold text-content-primary">Konfirmasi Aksi</h3>
+                </div>
+                <div class="px-6 py-5">
+                    <p class="text-sm text-content-secondary">
+                        Yakin ingin <span class="font-semibold text-content-primary" x-text="statusActionLabel.toLowerCase()"></span>
+                        pelanggan <span class="font-semibold text-content-primary" x-text="statusActionName"></span>?
+                    </p>
+                </div>
+                <div class="px-6 py-4 border-t border-border flex justify-end gap-3 bg-base-page">
+                    <button type="button" @click="showStatusModal = false" class="btn-secondary">Batal</button>
+                    <form :action="statusActionUrl" method="POST">
+                        @csrf
+                        <button type="submit" class="btn-primary" x-text="statusActionLabel"></button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
 @endsection
@@ -311,9 +422,20 @@
             document.addEventListener('alpine:init', () => {
                 Alpine.data('pelangganData', () => ({
                     showModal: {{ $errors->any() ? 'true' : 'false' }},
+                    showStatusModal: false,
+                    statusActionUrl: '',
+                    statusActionLabel: 'Nonaktifkan',
+                    statusActionName: '',
                     mode: 'create',
                     formAction: '{{ route('master.pelanggan.store') }}',
                     formMethod: 'POST',
+                    filterData: {
+                        kecamatan: @js(request('kecamatan', '')),
+                        desa: @js(request('desa', '')),
+                        dusun_id: @js((string) request('dusun_id', ''))
+                    },
+                    filterDesaOptions: @json($desaOptions),
+                    filterDusunOptions: @json($dusunOptions),
                     formData: {
                         nama_pelanggan: '{{ old('nama_pelanggan') }}',
                         kecamatan: '{{ old('kecamatan') }}',
@@ -324,6 +446,7 @@
                         kolektor_id: '{{ old('kolektor_id') }}',
                         teknisi_id: '{{ old('teknisi_id') }}',
                         status_alat: '{{ old('status_alat', 'pinjam') }}',
+                        is_active: '{{ old('is_active', '1') }}',
                         tanggal_pemasangan: '{{ old('tanggal_pemasangan') }}',
                         kontak: '{{ old('kontak') }}',
                         lokasi: '{{ old('lokasi') }}'
@@ -337,6 +460,27 @@
                         );
                     },
 
+                    get filteredFilterDesaList() {
+                        const list = this.filterDesaOptions
+                            .filter((item) => !this.filterData.kecamatan || item.kecamatan === this.filterData.kecamatan)
+                            .map((item) => item.desa);
+
+                        return [...new Set(list)];
+                    },
+
+                    get filteredFilterDusunList() {
+                        return this.filterDusunOptions.filter((item) => {
+                            if (this.filterData.kecamatan && item.kecamatan !== this.filterData.kecamatan) {
+                                return false;
+                            }
+                            if (this.filterData.desa && item.desa !== this.filterData.desa) {
+                                return false;
+                            }
+
+                            return true;
+                        });
+                    },
+
                     init() {
                         // Reset dusun_id saat desa berubah (berdasarkan kode)
                         this.$watch('formData.desa_kode', (newVal, oldVal) => {
@@ -347,6 +491,23 @@
                                 this.formData.dusun_id = '';
                             }
                         });
+
+                        this.$watch('filterData.kecamatan', () => {
+                            if (this.filterData.desa && !this.filteredFilterDesaList.includes(this.filterData.desa)) {
+                                this.filterData.desa = '';
+                            }
+                            const hasDusun = this.filteredFilterDusunList.some((item) => String(item.id) === String(this.filterData.dusun_id));
+                            if (!hasDusun) {
+                                this.filterData.dusun_id = '';
+                            }
+                        });
+
+                        this.$watch('filterData.desa', () => {
+                            const hasDusun = this.filteredFilterDusunList.some((item) => String(item.id) === String(this.filterData.dusun_id));
+                            if (!hasDusun) {
+                                this.filterData.dusun_id = '';
+                            }
+                        });
                     },
 
                     openCreate() {
@@ -355,7 +516,7 @@
                         this.formMethod = 'POST';
                         this.formData = {
                             nama_pelanggan: '', kecamatan: '', desa: '', desa_kode: '', dusun_id: '',
-                            bulanan_id: '', kolektor_id: '{{ auth()->user()->hasRole("kolektor") && !auth()->user()->hasRole("superadmin") ? auth()->user()->kolektor_id : "" }}', teknisi_id: '', status_alat: 'pinjam', tanggal_pemasangan: '',
+                            bulanan_id: '', kolektor_id: '{{ auth()->user()->hasRole("kolektor") && !auth()->user()->hasRole("superadmin") ? auth()->user()->kolektor_id : "" }}', teknisi_id: '', status_alat: 'pinjam', is_active: '1', tanggal_pemasangan: '',
                             kontak: '', lokasi: ''
                         };
                         this.showModal = true;
@@ -383,6 +544,7 @@
                             kolektor_id: item.kolektor_id || '',
                             teknisi_id: item.teknisi_id || '',
                             status_alat: item.status_alat || 'pinjam',
+                            is_active: item.is_active ? '1' : '0',
                             tanggal_pemasangan: formattedDate,
                             kontak: item.kontak || '',
                             lokasi: item.lokasi || ''
@@ -393,6 +555,13 @@
                         });
 
                         this.showModal = true;
+                    },
+
+                    openStatusModal(url, label, name) {
+                        this.statusActionUrl = url;
+                        this.statusActionLabel = label;
+                        this.statusActionName = name;
+                        this.showStatusModal = true;
                     }
                 }));
             });
