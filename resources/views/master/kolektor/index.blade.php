@@ -34,7 +34,7 @@
                                 Jml Pelanggan</th>
                             <th
                                 class="px-6 py-3 text-right text-xs font-semibold text-content-tertiary uppercase tracking-wider">
-                                Total Tagihan</th>
+                                Total Tagihan Bulan Ini</th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-semibold text-content-tertiary uppercase tracking-wider">
                                 Alamat</th>

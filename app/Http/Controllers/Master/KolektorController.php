@@ -13,10 +13,16 @@ class KolektorController extends Controller
 {
     public function index()
     {
+        $bulan = now()->month;
+        $tahun = now()->year;
+
         $kolektor = MasterKolektor::with('user')
             ->withCount('pelanggan')
-            ->withSum('tagihan', 'nominal')
+            ->withSum(['tagihan as tagihan_sum_nominal' => function ($query) use ($bulan, $tahun) {
+                $query->where('bulan', $bulan)->where('tahun', $tahun);
+            }], 'nominal')
             ->latest()->paginate(20);
+
         return view('master.kolektor.index', compact('kolektor'));
     }
 
