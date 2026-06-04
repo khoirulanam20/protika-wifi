@@ -302,8 +302,10 @@
                                             <option :value="d.id" x-text="d.dusun"></option>
                                         </template>
                                     </select>
+                                    @unlessrole('admin_desa')
                                     <p class="text-[10px] text-content-tertiary mt-1" x-show="!formData.desa">Pilih
                                         desa/kelurahan terlebih dahulu</p>
+                                    @endunlessrole
                                 </div>
 
                                 <div>
@@ -425,12 +427,8 @@
 @push('scripts')
     @once
         @php
-            $adminWilayahForJs = auth()->user()->hasRole('admin_desa') && auth()->user()->adminDesa
-                ? [
-                    'kecamatan' => auth()->user()->adminDesa->kecamatan,
-                    'desa' => auth()->user()->adminDesa->desa,
-                    'desa_kode' => auth()->user()->adminDesa->desa_kode,
-                ]
+            $adminWilayahForJs = auth()->user()->hasRole('admin_desa')
+                ? \App\Support\AdminDesaScope::wilayahDisplay()
                 : null;
         @endphp
         <script>

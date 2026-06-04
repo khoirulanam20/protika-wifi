@@ -6,6 +6,56 @@
 
 @section('content')
 
+    {{-- Filter --}}
+    <form method="GET" action="{{ route('dashboard') }}" class="card p-4 mb-6 flex flex-wrap gap-3 items-end">
+        <div>
+            <label class="block text-content-secondary text-xs font-medium mb-1.5">Bulan</label>
+            <select name="bulan" class="input-field w-40">
+                @foreach(range(1, 12) as $m)
+                    <option value="{{ $m }}" {{ (int) $bulan === $m ? 'selected' : '' }}>
+                        {{ \Carbon\Carbon::createFromDate($tahun, $m, 1)->translatedFormat('F') }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label class="block text-content-secondary text-xs font-medium mb-1.5">Tahun</label>
+            <select name="tahun" class="input-field w-32">
+                @foreach(range(now()->year, now()->year - 5) as $y)
+                    <option value="{{ $y }}" {{ (int) $tahun === $y ? 'selected' : '' }}>{{ $y }}</option>
+                @endforeach
+            </select>
+        </div>
+        @if($isSuperadmin)
+        <div>
+            <label class="block text-content-secondary text-xs font-medium mb-1.5">Admin Desa</label>
+            <select name="admin_desa_id" class="input-field w-56">
+                <option value="">Semua Admin Desa</option>
+                @foreach($adminDesaList as $ad)
+                    <option value="{{ $ad->id }}" {{ (int) ($adminDesaId ?? 0) === $ad->id ? 'selected' : '' }}>
+                        {{ $ad->nama_admin }}@if($ad->desa) — {{ $ad->desa }}@endif
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label class="block text-content-secondary text-xs font-medium mb-1.5">Kolektor</label>
+            <select name="kolektor_id" class="input-field w-48">
+                <option value="">Semua Kolektor</option>
+                @foreach($kolektorList as $k)
+                    <option value="{{ $k->id }}" {{ (int) ($kolektorId ?? 0) === $k->id ? 'selected' : '' }}>
+                        {{ $k->nama_kolektor }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        @endif
+        <button type="submit" class="btn-primary">Filter</button>
+        @if(request()->hasAny(['bulan', 'tahun', 'kolektor_id', 'admin_desa_id']))
+            <a href="{{ route('dashboard') }}" class="btn-secondary">Reset</a>
+        @endif
+    </form>
+
     {{-- Stats Grid --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {{-- Total Pelanggan --}}
@@ -33,7 +83,7 @@
             </div>
             <div>
                 <p class="text-stat">{{ $stats['lunas'] }}</p>
-                <p class="text-label mt-1">Lunas Bulan Ini</p>
+                <p class="text-label mt-1">Lunas · {{ $periodeLabel }}</p>
             </div>
         </div>
 
@@ -47,7 +97,7 @@
             </div>
             <div>
                 <p class="text-stat">{{ $stats['belum_lunas'] }}</p>
-                <p class="text-label mt-1">Belum Lunas</p>
+                <p class="text-label mt-1">Belum Lunas · {{ $periodeLabel }}</p>
             </div>
         </div>
 
@@ -62,7 +112,7 @@
             <div>
                 <p class="text-[32px] md:text-stat font-extrabold text-content-primary tracking-tight">Rp
                     {{ number_format($stats['total_nominal'], 0, ',', '.') }}</p>
-                <p class="text-label mt-1">{{ $isSuperadmin ? 'Pendapatan Bulan Ini' : 'Setoran Hari Ini' }}</p>
+                <p class="text-label mt-1">Pendapatan Lunas · {{ $periodeLabel }}</p>
             </div>
         </div>
     </div>
@@ -75,7 +125,7 @@
                 <div class="flex items-center justify-between mb-8">
                     <div>
                         <h3 class="text-title">Tren Pendapatan</h3>
-                        <p class="text-label">Grafik koleksi tagihan 6 bulan terakhir</p>
+                        <p class="text-label">6 bulan hingga {{ $trenEndLabel }} · tagihan lunas</p>
                     </div>
                     <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10">
                         <span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
@@ -87,66 +137,33 @@
                 </div>
             </div>
 
-            {{-- Pending Table --}}
-            <div class="card overflow-hidden animate-fade-in-up" style="animation-delay: 0.6s;">
-                <div class="px-6 py-5 border-b border-border flex items-center justify-between bg-white/50 backdrop-blur-sm">
+            @if($isSuperadmin)
+            {{-- Revenue per Kolektor (stacked) --}}
+            <div class="card p-6 animate-fade-in-up" style="animation-delay: 0.55s;">
+                <div class="flex items-center justify-between mb-8">
                     <div>
-                        <h3 class="text-lg font-bold text-content-primary">Tagihan Pending Terbaru</h3>
-                        <p class="text-xs text-content-secondary mt-1">Daftar pelanggan yang belum lunas</p>
+                        <h3 class="text-title">Tren Pendapatan per Kolektor</h3>
+                        <p class="text-label">6 bulan hingga {{ $trenEndLabel }}, per kolektor</p>
                     </div>
-                    <a href="{{ route('tagihan.index', ['status' => 'belum_lunas']) }}"
-                        class="px-4 py-2 bg-base-input hover:bg-border rounded-lg text-sm font-semibold text-primary transition-colors flex items-center gap-2">
-                        Lihat Semua
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    </a>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="text-content-tertiary text-left bg-base-input/50">
-                                <th class="px-6 py-4 font-semibold">Pelanggan</th>
-                                <th class="px-6 py-4 font-semibold">Periode</th>
-                                <th class="px-6 py-4 font-semibold text-right">Nominal</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-border/50 bg-white/40">
-                            @forelse($pending as $item)
-                                <tr class="hover:bg-primary/5 transition-colors group cursor-pointer">
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs group-hover:bg-primary group-hover:text-white transition-colors">
-                                                {{ substr($item->pelanggan->nama_pelanggan, 0, 1) }}
-                                            </div>
-                                            <div>
-                                                <span class="font-semibold text-content-primary block">{{ $item->pelanggan->nama_pelanggan }}</span>
-                                                <span class="text-xs text-content-tertiary">{{ $item->pelanggan->desa }}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-border text-content-secondary text-xs font-medium">
-                                            <svg class="w-3.5 h-3.5 text-content-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                            {{ date('M', mktime(0, 0, 0, $item->bulan, 1)) }} {{ $item->tahun }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-right font-bold text-content-primary">
-                                        Rp {{ number_format($item->nominal, 0, ',', '.') }}
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="3" class="px-6 py-12 text-center">
-                                        <div class="flex flex-col items-center justify-center text-content-tertiary">
-                                            <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                                            <p class="font-medium">Tidak ada tagihan pending.</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                <div class="relative w-full h-[360px]">
+                    <canvas id="revenuePerKolektorChart"></canvas>
                 </div>
             </div>
+
+            {{-- Pelanggan per Kolektor --}}
+            <div class="card p-6 animate-fade-in-up" style="animation-delay: 0.58s;">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h3 class="text-title">Jumlah Pelanggan per Kolektor</h3>
+                        <p class="text-label">Total pelanggan aktif terdaftar per kolektor</p>
+                    </div>
+                </div>
+                <div class="relative w-full h-[320px]">
+                    <canvas id="pelangganPerKolektorChart"></canvas>
+                </div>
+            </div>
+            @endif
         </div>
 
         {{-- Side Area: Stats & Info --}}
@@ -214,6 +231,66 @@
                 </div>
             </div>
 
+            {{-- Pending Table --}}
+            <div class="card overflow-hidden animate-fade-in-up" style="animation-delay: 0.65s;">
+                <div class="px-5 py-4 border-b border-border flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white/50 backdrop-blur-sm">
+                    <div>
+                        <h3 class="text-base font-bold text-content-primary">Tagihan Pending Terbaru</h3>
+                        <p class="text-xs text-content-secondary mt-0.5">Daftar pelanggan yang belum lunas</p>
+                    </div>
+                    <a href="{{ route('tagihan.index', ['status' => 'belum_lunas', 'bulan' => $bulan, 'tahun' => $tahun]) }}"
+                        class="px-3 py-2 bg-base-input hover:bg-border rounded-lg text-xs font-semibold text-primary transition-colors flex items-center justify-center gap-1.5 shrink-0">
+                        Lihat Semua
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-content-tertiary text-left bg-base-input/50">
+                                <th class="px-4 py-3 font-semibold">Pelanggan</th>
+                                <th class="px-4 py-3 font-semibold">Periode</th>
+                                <th class="px-4 py-3 font-semibold text-right">Nominal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border/50 bg-white/40">
+                            @forelse($pending as $item)
+                                <tr class="hover:bg-primary/5 transition-colors group">
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs group-hover:bg-primary group-hover:text-white transition-colors shrink-0">
+                                                {{ substr($item->pelanggan->nama_pelanggan, 0, 1) }}
+                                            </div>
+                                            <div class="min-w-0">
+                                                <span class="font-semibold text-content-primary block truncate text-xs">{{ $item->pelanggan->nama_pelanggan }}</span>
+                                                <span class="text-[10px] text-content-tertiary truncate block">{{ $item->pelanggan->desa }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-border text-content-secondary text-[10px] font-medium">
+                                            {{ date('M', mktime(0, 0, 0, $item->bulan, 1)) }} {{ $item->tahun }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-right font-bold text-content-primary text-xs whitespace-nowrap">
+                                        Rp {{ number_format($item->nominal, 0, ',', '.') }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="px-4 py-10 text-center">
+                                        <div class="flex flex-col items-center justify-center text-content-tertiary">
+                                            <svg class="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                                            <p class="text-sm font-medium">Tidak ada tagihan pending.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             {{-- Quick Links / Help --}}
             <div class="card p-6 border-l-4 border-l-primary">
                 <h4 class="text-sm font-bold text-primary uppercase tracking-widest mb-4">Pusat Bantuan</h4>
@@ -246,85 +323,189 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                const ctx = document.getElementById('revenueChart').getContext('2d');
-                
-                // Create gradient for chart
-                let gradient = ctx.createLinearGradient(0, 0, 0, 400);
-                gradient.addColorStop(0, 'rgba(37, 99, 235, 1)');   // primary
-                gradient.addColorStop(1, 'rgba(37, 99, 235, 0.4)'); // primary transparent
+                const rupiahTick = (val) => {
+                    if (val >= 1000000) {
+                        return 'Rp ' + (val / 1000000).toFixed(1) + 'M';
+                    }
+                    return 'Rp ' + val.toLocaleString('id-ID');
+                };
 
-                const labels = @json(collect($tren)->pluck('bulan'));
-                const data = @json(collect($tren)->pluck('total'));
+                const tooltipScopeLabel = @json($tooltipScopeLabel);
 
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Pendapatan (Rp)',
-                            data: data,
-                            backgroundColor: gradient,
-                            borderRadius: 8,
-                            barThickness: 32,
-                            hoverBackgroundColor: '#1D4ED8',
-                            borderWidth: 0,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        animation: {
-                            duration: 2000,
-                            easing: 'easeOutQuart'
+                const revenueEl = document.getElementById('revenueChart');
+                if (revenueEl) {
+                    const ctx = revenueEl.getContext('2d');
+                    let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                    gradient.addColorStop(0, 'rgba(37, 99, 235, 1)');
+                    gradient.addColorStop(1, 'rgba(37, 99, 235, 0.4)');
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: @json(collect($tren)->pluck('bulan')),
+                            datasets: [{
+                                label: 'Pendapatan (Rp)',
+                                data: @json(collect($tren)->pluck('total')),
+                                backgroundColor: gradient,
+                                borderRadius: 8,
+                                barThickness: 32,
+                                hoverBackgroundColor: '#1D4ED8',
+                                borderWidth: 0,
+                            }]
                         },
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                                titleFont: { size: 13, family: "'Inter', sans-serif" },
-                                bodyFont: { size: 14, family: "'Inter', sans-serif", weight: 'bold' },
-                                padding: 12,
-                                cornerRadius: 8,
-                                displayColors: false,
-                                callbacks: {
-                                    label: function(context) {
-                                        return 'Rp ' + context.raw.toLocaleString('id-ID');
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: { duration: 2000, easing: 'easeOutQuart' },
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                    titleFont: { size: 13, family: "'Inter', sans-serif" },
+                                    bodyFont: { size: 14, family: "'Inter', sans-serif", weight: 'bold' },
+                                    padding: 12,
+                                    cornerRadius: 8,
+                                    displayColors: false,
+                                    callbacks: {
+                                        label: (ctx) => 'Rp ' + ctx.raw.toLocaleString('id-ID'),
+                                        footer: () => tooltipScopeLabel || '',
                                     }
                                 }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                border: { display: false },
-                                grid: { 
-                                    color: '#F1F5F9',
-                                    drawTicks: false,
-                                },
-                                ticks: {
-                                    padding: 10,
-                                    callback: (val) => {
-                                        if (val >= 1000000) {
-                                            return 'Rp ' + (val/1000000).toFixed(1) + 'M';
-                                        }
-                                        return 'Rp ' + val.toLocaleString('id-ID');
-                                    },
-                                    color: '#94A3B8',
-                                    font: { size: 11, family: "'Inter', sans-serif", weight: '500' }
-                                }
                             },
-                            x: {
-                                border: { display: false },
-                                grid: { display: false },
-                                ticks: { 
-                                    padding: 10,
-                                    color: '#64748B', 
-                                    font: { size: 12, family: "'Inter', sans-serif", weight: '600' } 
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    border: { display: false },
+                                    grid: { color: '#F1F5F9', drawTicks: false },
+                                    ticks: { padding: 10, callback: rupiahTick, color: '#94A3B8', font: { size: 11, family: "'Inter', sans-serif", weight: '500' } }
+                                },
+                                x: {
+                                    border: { display: false },
+                                    grid: { display: false },
+                                    ticks: { padding: 10, color: '#64748B', font: { size: 12, family: "'Inter', sans-serif", weight: '600' } }
                                 }
                             }
                         }
-                    }
-                });
+                    });
+                }
+
+                @if($isSuperadmin)
+                const kolektorColors = [
+                    '#2563EB', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
+                    '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'
+                ];
+
+                const trenPerKolektor = @json($trenPerKolektor);
+                const perKolektorEl = document.getElementById('revenuePerKolektorChart');
+                if (perKolektorEl && trenPerKolektor.datasets.length) {
+                    const stackedDatasets = trenPerKolektor.datasets.map((ds, i) => ({
+                        label: ds.label,
+                        data: ds.data,
+                        backgroundColor: kolektorColors[i % kolektorColors.length],
+                        borderRadius: 4,
+                        borderWidth: 0,
+                        stack: 'stack0',
+                    }));
+
+                    new Chart(perKolektorEl.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: trenPerKolektor.labels,
+                            datasets: stackedDatasets,
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'bottom',
+                                    labels: { boxWidth: 12, padding: 16, font: { size: 11, family: "'Inter', sans-serif" } }
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                    titleFont: { size: 13, family: "'Inter', sans-serif" },
+                                    bodyFont: { size: 14, family: "'Inter', sans-serif", weight: 'bold' },
+                                    padding: 12,
+                                    cornerRadius: 8,
+                                    displayColors: true,
+                                    callbacks: {
+                                        label: (ctx) => `${ctx.dataset.label}: Rp ${ctx.raw.toLocaleString('id-ID')}`,
+                                    }
+                                },
+                            },
+                            scales: {
+                                x: {
+                                    stacked: true,
+                                    border: { display: false },
+                                    grid: { display: false },
+                                    ticks: { color: '#64748B', font: { size: 12, family: "'Inter', sans-serif", weight: '600' } }
+                                },
+                                y: {
+                                    stacked: true,
+                                    beginAtZero: true,
+                                    border: { display: false },
+                                    grid: { color: '#F1F5F9', drawTicks: false },
+                                    ticks: { padding: 10, callback: rupiahTick, color: '#94A3B8', font: { size: 11, family: "'Inter', sans-serif", weight: '500' } }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                const pelangganPerKolektor = @json($pelangganPerKolektor);
+                const pelangganEl = document.getElementById('pelangganPerKolektorChart');
+                if (pelangganEl && pelangganPerKolektor.labels.length) {
+                    const pelCtx = pelangganEl.getContext('2d');
+                    let pelGradient = pelCtx.createLinearGradient(0, 0, 0, 300);
+                    pelGradient.addColorStop(0, 'rgba(16, 185, 129, 1)');
+                    pelGradient.addColorStop(1, 'rgba(16, 185, 129, 0.5)');
+
+                    new Chart(pelCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: pelangganPerKolektor.labels,
+                            datasets: [{
+                                label: 'Jumlah Pelanggan',
+                                data: pelangganPerKolektor.counts,
+                                backgroundColor: pelGradient,
+                                borderRadius: 8,
+                                borderWidth: 0,
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                    padding: 12,
+                                    cornerRadius: 8,
+                                    displayColors: false,
+                                    callbacks: {
+                                        label: (ctx) => `${ctx.label}: ${ctx.raw} pelanggan`,
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    border: { display: false },
+                                    grid: { color: '#F1F5F9', drawTicks: false },
+                                    ticks: { stepSize: 1, color: '#94A3B8', font: { size: 11, family: "'Inter', sans-serif" } }
+                                },
+                                y: {
+                                    border: { display: false },
+                                    grid: { display: false },
+                                    ticks: { color: '#64748B', font: { size: 11, family: "'Inter', sans-serif", weight: '600' } }
+                                }
+                            }
+                        }
+                    });
+                }
+                @endif
             });
         </script>
     @endpush

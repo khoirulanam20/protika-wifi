@@ -149,7 +149,7 @@
 <div x-data="locationPicker({ initialValue: '{{ $lokasiValue ?? '' }}' })" x-init="initMap()" class="w-full">
     <label class="block text-content-secondary text-sm mb-2">Tag Lokasi Maps (Koordinat)</label>
     
-    <div class="relative mb-2 z-50">
+    <div class="relative mb-2">
         <div class="flex gap-2">
             <input type="text" x-model="searchQuery" @keydown.enter.prevent="searchLocation()" @click.away="showDropdown = false" @focus="if(searchResults.length > 0) showDropdown = true" class="input-field" placeholder="Cari nama jalan, desa, atau kota..." autocomplete="off">
             <button type="button" @click="searchLocation()" class="btn-secondary px-4 flex-shrink-0" :disabled="isSearching">
@@ -160,7 +160,7 @@
 
         {{-- Dropdown Hasil Pencarian --}}
         <div x-show="showDropdown" x-transition.opacity 
-             class="absolute top-full left-0 mt-1 w-full bg-white border border-border rounded-lg shadow-xl max-h-60 overflow-y-auto z-[99]"
+             class="absolute top-full left-0 mt-1 w-full bg-white border border-border rounded-lg shadow-xl max-h-60 overflow-y-auto z-30"
              style="display: none;">
             <template x-if="searchResults.length === 0">
                 <div class="p-4 text-center text-sm text-content-tertiary">Pencarian tidak ditemukan</div>

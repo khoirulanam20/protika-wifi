@@ -95,6 +95,7 @@
             @endif
         </div>
 
+        {{-- Modal Pop-up --}}
         <div x-show="showModal" class="fixed inset-0 z-50 overflow-y-auto px-4 pt-4 pb-24" style="display: none;">
             <div x-show="showModal" x-transition.opacity class="fixed inset-0 bg-content-primary/40 backdrop-blur-sm"
                 @click="showModal = false"></div>
@@ -105,14 +106,16 @@
                 x-transition:leave="transition ease-in duration-200"
                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                 x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-                class="relative bg-white rounded-xl shadow-modal w-full max-w-2xl mx-auto z-10 overflow-hidden max-h-[90vh] overflow-y-auto">
+                class="relative bg-white rounded-xl shadow-modal w-full max-w-2xl mx-auto z-10 overflow-hidden">
 
-                <div class="px-6 py-4 border-b border-border flex justify-between items-center bg-base-page sticky top-0 z-10">
+                <div class="px-6 py-4 border-b border-border flex justify-between items-center bg-base-page">
                     <h3 class="text-lg font-semibold text-content-primary"
-                        x-text="mode === 'create' ? 'Tambah Admin Desa' : 'Edit Admin Desa'"></h3>
-                    <button @click="showModal = false" class="text-content-tertiary hover:text-content-primary transition-colors">
+                        x-text="mode === 'create' ? 'Tambah Admin Desa Baru' : 'Edit Data Admin Desa'"></h3>
+                    <button @click="showModal = false"
+                        class="text-content-tertiary hover:text-content-primary transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
@@ -122,28 +125,36 @@
                     <input type="hidden" name="_method" :value="formMethod">
 
                     <div class="p-6 space-y-5">
-                        <div>
-                            <h4 class="text-sm font-semibold text-content-primary border-b border-border pb-2 mb-4">Informasi Admin Desa</h4>
+                        <div class="mb-4">
+                            <h4 class="text-sm font-semibold text-content-primary border-b border-border pb-2 mb-4">
+                                Informasi Admin Desa</h4>
                             <div class="space-y-4">
                                 <div>
-                                    <label class="block text-content-secondary text-sm mb-2">Nama Admin <span class="text-status-danger">*</span></label>
-                                    <input type="text" name="nama_admin" x-model="formData.nama_admin" class="input-field" required>
+                                    <label class="block text-content-secondary text-sm mb-2">Nama Admin <span
+                                            class="text-status-danger">*</span></label>
+                                    <input type="text" name="nama_admin" x-model="formData.nama_admin" class="input-field"
+                                        required>
                                 </div>
                                 <div>
                                     <label class="block text-content-secondary text-sm mb-2">Alamat Lengkap</label>
-                                    <textarea name="alamat" rows="2" x-model="formData.alamat" class="input-field"></textarea>
+                                    <textarea name="alamat" rows="2" x-model="formData.alamat"
+                                        class="input-field"></textarea>
                                 </div>
                                 @include('layouts.components.wilayah-api')
                                 <div>
                                     <label class="block text-content-secondary text-sm mb-2">Kontak / No. HP</label>
-                                    <input type="text" name="kontak" x-model="formData.kontak" class="input-field" placeholder="08xxxxxxxxxx">
+                                    <input type="text" name="kontak" x-model="formData.kontak" class="input-field"
+                                        placeholder="08xxxxxxxxxx">
                                 </div>
                                 @include('layouts.components.location-picker')
                             </div>
                         </div>
 
                         <div>
-                            <h4 class="text-sm font-semibold text-content-primary border-b border-border pb-2 mb-4">Akun Login</h4>
+                            <h4 class="text-sm font-semibold text-content-primary border-b border-border pb-2 mb-4">
+                                Akun Login
+                            </h4>
+
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="md:col-span-2">
                                     <label class="block text-content-secondary text-sm mb-2">Email Login</label>
@@ -153,19 +164,22 @@
                                 <div>
                                     <label class="block text-content-secondary text-sm mb-2">
                                         Password
-                                        <span x-show="mode === 'edit'" class="text-xs text-content-tertiary">(kosongkan jika tidak diubah)</span>
+                                        <span x-show="mode === 'edit'" class="text-xs text-content-tertiary">(kosongkan jika
+                                            tidak diubah)</span>
                                     </label>
-                                    <input type="password" name="password" class="input-field" placeholder="Min. 6 karakter">
+                                    <input type="password" name="password" class="input-field"
+                                        placeholder="Min. 6 karakter">
                                 </div>
                                 <div>
                                     <label class="block text-content-secondary text-sm mb-2">Konfirmasi Password</label>
-                                    <input type="password" name="password_confirmation" class="input-field" placeholder="Ulangi password">
+                                    <input type="password" name="password_confirmation" class="input-field"
+                                        placeholder="Ulangi password">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="px-6 py-4 border-t border-border flex justify-end gap-3 bg-base-page sticky bottom-0">
+                    <div class="px-6 py-4 border-t border-border flex justify-end gap-3 bg-base-page">
                         <button type="button" @click="showModal = false" class="btn-secondary">Batal</button>
                         <button type="submit" class="btn-primary"
                             x-text="mode === 'create' ? 'Simpan Admin Desa' : 'Update Admin Desa'"></button>

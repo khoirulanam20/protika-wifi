@@ -11,10 +11,12 @@
     class="{{ $class ?? 'block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5' }} {{ request()->routeIs('master.bulanan.*') ? 'text-primary bg-primary/5 font-medium' : '' }}">
     Paket Bulanan
 </a>
+@hasanyrole('superadmin|kolektor')
 <a href="{{ route('master.kolektor.index') }}"
     class="{{ $class ?? 'block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5' }} {{ request()->routeIs('master.kolektor.*') ? 'text-primary bg-primary/5 font-medium' : '' }}">
     Kolektor
 </a>
+@endhasanyrole
 <a href="{{ route('master.teknisi.index') }}"
     class="{{ $class ?? 'block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5' }} {{ request()->routeIs('master.teknisi.*') ? 'text-primary bg-primary/5 font-medium' : '' }}">
     Teknisi

@@ -43,8 +43,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('pelanggan/{pelanggan}/aktifkan', [PelangganController::class, 'aktifkan'])->name('pelanggan.aktifkan');
         Route::resource('dusun',      DusunController::class);
         Route::resource('bulanan',    BulanController::class);
-        Route::resource('kolektor',   KolektorController::class);
         Route::resource('teknisi',    TeknisiController::class);
+
+        Route::middleware(['role:superadmin|kolektor'])->group(function () {
+            Route::resource('kolektor', KolektorController::class);
+        });
         Route::resource('penagih',    PenagihController::class);
 
         Route::middleware(['role:superadmin'])->group(function () {

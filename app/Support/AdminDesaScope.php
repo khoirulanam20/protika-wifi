@@ -57,6 +57,21 @@ class AdminDesaScope
         });
     }
 
+    public static function applyPelangganScopeByDesaKode(Builder $query, string $desaKode): Builder
+    {
+        return $query->where(function ($q) use ($desaKode) {
+            $q->where('desa_kode', $desaKode)
+                ->orWhereHas('dusun', fn ($d) => $d->where('desa_kode', $desaKode));
+        });
+    }
+
+    public static function applyTagihanScopeByDesaKode(Builder $query, string $desaKode): Builder
+    {
+        return $query->whereHas('pelanggan', function ($q) use ($desaKode) {
+            self::applyPelangganScopeByDesaKode($q, $desaKode);
+        });
+    }
+
     public static function applyDusunScope(Builder $query): Builder
     {
         $desaKode = self::desaKode();
@@ -113,6 +128,28 @@ class AdminDesaScope
         return [
             'desa' => $desa?->nama,
             'kecamatan' => $kecamatan?->nama,
+        ];
+    }
+
+    public static function wilayahDisplay(): ?array
+    {
+        $admin = auth()->user()?->adminDesa;
+
+        if (!$admin || !$admin->desa_kode) {
+            return null;
+        }
+
+        $desaKode = $admin->desa_kode;
+        $resolved = self::resolveDesaFromKode($desaKode);
+
+        $provinsiKode = substr($desaKode, 0, 2);
+        $provinsi = Wilayah::find($provinsiKode);
+
+        return [
+            'provinsi' => $provinsi?->nama,
+            'kecamatan' => $admin->kecamatan ?: $resolved['kecamatan'],
+            'desa' => $admin->desa ?: $resolved['desa'],
+            'desa_kode' => $desaKode,
         ];
     }
 
