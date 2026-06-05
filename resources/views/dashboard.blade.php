@@ -160,10 +160,13 @@
                     </div>
                 </div>
                 @php
-                    $pelangganChartHeight = max(400, count($pelangganPerKolektor['labels'] ?? []) * 40);
+                    $pelangganLabelCount = count($pelangganPerKolektor['labels'] ?? []);
+                    $pelangganChartInnerHeight = max(280, $pelangganLabelCount * 28);
                 @endphp
-                <div class="relative w-full" style="height: {{ $pelangganChartHeight }}px">
-                    <canvas id="pelangganPerKolektorChart"></canvas>
+                <div class="relative w-full max-h-[420px] overflow-y-auto">
+                    <div class="relative w-full" style="height: {{ $pelangganChartInnerHeight }}px">
+                        <canvas id="pelangganPerKolektorChart"></canvas>
+                    </div>
                 </div>
             </div>
             @endif
@@ -503,7 +506,11 @@
                                 y: {
                                     border: { display: false },
                                     grid: { display: false },
-                                    ticks: { color: '#64748B', font: { size: 11, family: "'Inter', sans-serif", weight: '600' } }
+                                    ticks: {
+                                        autoSkip: false,
+                                        color: '#64748B',
+                                        font: { size: 11, family: "'Inter', sans-serif", weight: '600' },
+                                    }
                                 }
                             }
                         }
