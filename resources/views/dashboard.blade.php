@@ -159,7 +159,10 @@
                         <p class="text-label">Total pelanggan aktif terdaftar per kolektor</p>
                     </div>
                 </div>
-                <div class="relative w-full h-[320px]">
+                @php
+                    $pelangganChartHeight = max(400, count($pelangganPerKolektor['labels'] ?? []) * 40);
+                @endphp
+                <div class="relative w-full" style="height: {{ $pelangganChartHeight }}px">
                     <canvas id="pelangganPerKolektorChart"></canvas>
                 </div>
             </div>
@@ -457,7 +460,8 @@
                 const pelangganEl = document.getElementById('pelangganPerKolektorChart');
                 if (pelangganEl && pelangganPerKolektor.labels.length) {
                     const pelCtx = pelangganEl.getContext('2d');
-                    let pelGradient = pelCtx.createLinearGradient(0, 0, 0, 300);
+                    const pelHeight = pelangganEl.parentElement?.clientHeight ?? 400;
+                    let pelGradient = pelCtx.createLinearGradient(0, 0, 0, pelHeight);
                     pelGradient.addColorStop(0, 'rgba(16, 185, 129, 1)');
                     pelGradient.addColorStop(1, 'rgba(16, 185, 129, 0.5)');
 
