@@ -27,7 +27,10 @@
                 <p class="text-content-primary text-sm font-semibold truncate">{{ auth()->user()->name }}</p>
                 <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium
                              bg-purple-500/25 text-purple-300 border border-purple-500/30">
-                    {{ ucfirst(auth()->user()->getRoleNames()->first() ?? 'User') }}
+                    @php
+                        $role = auth()->user()->getRoleNames()->first();
+                        echo $role === 'admin_desa' ? 'Admin Desa' : ucfirst($role ?? 'User');
+                    @endphp
                 </span>
             </div>
         </div>
@@ -36,7 +39,7 @@
     {{-- Navigation --}}
     <nav class="px-3 py-4 overflow-y-auto h-[calc(100vh-200px)] space-y-1">
 
-        {{-- Dashboard --}}
+        @hasanyrole('superadmin|kolektor|admin_desa')
         <a href="{{ route('dashboard') }}"
            class="nav-item {{ request()->routeIs('dashboard') ? 'nav-active' : '' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,9 +48,9 @@
             </svg>
             Dashboard
         </a>
+        @endhasanyrole
 
-        {{-- Master Data (Superadmin Only) --}}
-        @role('superadmin')
+        @hasanyrole('superadmin|kolektor|admin_desa')
         <div x-data="{ open: {{ request()->is('master/*') ? 'true' : 'false' }} }">
             <button @click="open = !open"
                     class="nav-item w-full justify-between {{ request()->is('master/*') ? 'nav-active' : '' }}">
@@ -63,41 +66,13 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
             </button>
-            <div x-show="open" x-transition class="ml-4 mt-1 space-y-1 pl-4
-                                                    border-l border-border">
-                <a href="{{ route('master.pelanggan.index') }}"
-                   class="nav-sub {{ request()->routeIs('master.pelanggan.*') ? 'nav-sub-active' : '' }}">
-                    Pelanggan
-                </a>
-                <a href="{{ route('master.dusun.index') }}"
-                   class="nav-sub {{ request()->routeIs('master.dusun.*') ? 'nav-sub-active' : '' }}">
-                    Dusun / Wilayah
-                </a>
-                <a href="{{ route('master.bulanan.index') }}"
-                   class="nav-sub {{ request()->routeIs('master.bulanan.*') ? 'nav-sub-active' : '' }}">
-                    Paket Bulanan
-                </a>
-                <a href="{{ route('master.kolektor.index') }}"
-                   class="nav-sub {{ request()->routeIs('master.kolektor.*') ? 'nav-sub-active' : '' }}">
-                    Kolektor
-                </a>
-                <a href="{{ route('master.teknisi.index') }}"
-                   class="nav-sub {{ request()->routeIs('master.teknisi.*') ? 'nav-sub-active' : '' }}">
-                    Teknisi
-                </a>
-                <a href="{{ route('master.penagih.index') }}"
-                   class="nav-sub {{ request()->routeIs('master.penagih.*') ? 'nav-sub-active' : '' }}">
-                    Penagih
-                </a>
-                <a href="{{ route('master.users.index') }}"
-                   class="nav-sub {{ request()->routeIs('master.users.*') ? 'nav-sub-active' : '' }}">
-                    Pengguna
-                </a>
+            <div x-show="open" x-transition class="ml-4 mt-1 space-y-1 pl-4 border-l border-border">
+                @include('layouts.components.nav-master-links', ['class' => 'nav-sub block'])
             </div>
         </div>
-        @endrole
+        @endhasanyrole
 
-        {{-- Tagihan --}}
+        @hasanyrole('superadmin|kolektor|admin_desa')
         <div x-data="{ open: {{ request()->is('tagihan*') ? 'true' : 'false' }} }">
             <button @click="open = !open"
                     class="nav-item w-full justify-between {{ request()->is('tagihan*') ? 'nav-active' : '' }}">
@@ -115,21 +90,16 @@
             </button>
             <div x-show="open" x-transition class="ml-4 mt-1 space-y-1 pl-4 border-l border-border">
                 <a href="{{ route('tagihan.index') }}"
-                   class="nav-sub {{ request()->routeIs('tagihan.index') ? 'nav-sub-active' : '' }}">
+                   class="nav-sub {{ request()->routeIs('tagihan.index') || request()->routeIs('tagihan.edit') ? 'nav-sub-active' : '' }}">
                     Daftar Tagihan
                 </a>
-                <a href="{{ route('tagihan.create') }}"
-                   class="nav-sub {{ request()->routeIs('tagihan.create') ? 'nav-sub-active' : '' }}">
-                    Input Tagihan
-                </a>
-                @role('superadmin')
                 <a href="{{ route('tagihan.rekap') }}"
                    class="nav-sub {{ request()->routeIs('tagihan.rekap*') ? 'nav-sub-active' : '' }}">
                     Rekap & Laporan
                 </a>
-                @endrole
             </div>
         </div>
+        @endhasanyrole
 
     </nav>
 
@@ -149,7 +119,6 @@
     </div>
 </aside>
 
-{{-- CSS helper classes --}}
 <style>
 .nav-item {
     display: flex; align-items: center; gap: 0.75rem;

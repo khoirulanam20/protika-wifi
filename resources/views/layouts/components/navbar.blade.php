@@ -12,12 +12,14 @@
 
             {{-- Primary Navigation --}}
             <nav class="hidden md:flex items-center gap-1">
+                @hasanyrole('superadmin|kolektor|admin_desa')
                 <a href="{{ route('dashboard') }}"
                     class="{{ request()->routeIs('dashboard') ? 'nav-active' : 'nav-item' }}">
                     Dashboard
                 </a>
+                @endhasanyrole
 
-                @hasanyrole('superadmin|kolektor')
+                @hasanyrole('superadmin|kolektor|admin_desa')
                 <div class="relative" @click.away="masterMenuOpen = false">
                     <button @click="masterMenuOpen = !masterMenuOpen"
                         class="{{ request()->is('master/*') ? 'nav-active' : 'nav-item' }} inline-flex items-center gap-1">
@@ -29,29 +31,12 @@
                     <div x-show="masterMenuOpen" x-transition.opacity.duration.200ms
                         class="absolute top-full left-0 mt-2 w-48 bg-white border border-border rounded-lg shadow-modal py-2 z-50"
                         style="display:none;">
-                        <a href="{{ route('master.pelanggan.index') }}"
-                            class="block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5">Pelanggan</a>
-                        <a href="{{ route('master.dusun.index') }}"
-                            class="block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5">Wilayah</a>
-                        <a href="{{ route('master.bulanan.index') }}"
-                            class="block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5">Paket
-                            Bulanan</a>
-                        @role('superadmin')
-                        <a href="{{ route('master.kolektor.index') }}"
-                            class="block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5">Kolektor</a>
-                        @endrole
-                        <a href="{{ route('master.teknisi.index') }}"
-                            class="block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5">Teknisi</a>
-                        <a href="{{ route('master.penagih.index') }}"
-                            class="block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5">Penagih</a>
-                        @role('superadmin')
-                        <a href="{{ route('master.users.index') }}"
-                            class="block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5">Pengguna</a>
-                        @endrole
+                        @include('layouts.components.nav-master-links')
                     </div>
                 </div>
                 @endhasanyrole
 
+                @hasanyrole('superadmin|kolektor|admin_desa')
                 <div class="relative" @click.away="tagihanMenuOpen = false">
                     <button @click="tagihanMenuOpen = !tagihanMenuOpen"
                         class="{{ request()->is('tagihan*') ? 'nav-active' : 'nav-item' }} inline-flex items-center gap-1">
@@ -64,15 +49,12 @@
                         class="absolute top-full left-0 mt-2 w-48 bg-white border border-border rounded-lg shadow-modal py-2 z-50"
                         style="display:none;">
                         <a href="{{ route('tagihan.index') }}"
-                            class="block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5">Daftar
-                            Tagihan</a>
-                        @role('superadmin')
+                            class="block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5">Daftar Tagihan</a>
                         <a href="{{ route('tagihan.rekap') }}"
-                            class="block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5">Rekap
-                            & Laporan</a>
-                        @endrole
+                            class="block px-4 py-2 text-sm text-content-secondary hover:text-primary hover:bg-primary/5">Rekap & Laporan</a>
                     </div>
                 </div>
+                @endhasanyrole
             </nav>
         </div>
 

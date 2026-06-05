@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Tagihan;
 use App\Http\Controllers\Controller;
 use App\Models\Tagihan;
 use App\Models\MasterKolektor;
+use App\Support\AdminDesaScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -25,6 +26,8 @@ class RekapController extends Controller
 
         if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
             $query->where('kolektor_id', auth()->user()->kolektor_id);
+        } elseif (AdminDesaScope::isAdminDesaOnly()) {
+            AdminDesaScope::applyTagihanScope($query);
         }
 
         $query->when($bulan, fn ($q) => $q->where('bulan', $bulan))

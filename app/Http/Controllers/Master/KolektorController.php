@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Models\MasterKolektor;
 use App\Models\User;
+use App\Support\AdminDesaScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -16,12 +17,17 @@ class KolektorController extends Controller
         $bulan = now()->month;
         $tahun = now()->year;
 
-        $kolektor = MasterKolektor::with('user')
+        $query = MasterKolektor::with('user')
             ->withCount('pelanggan')
             ->withSum(['tagihan as tagihan_sum_nominal' => function ($query) use ($bulan, $tahun) {
                 $query->where('bulan', $bulan)->where('tahun', $tahun);
-            }], 'nominal')
-            ->latest()->paginate(20);
+            }], 'nominal');
+
+        if (AdminDesaScope::isAdminDesaOnly()) {
+            AdminDesaScope::applyWilayahMasterScope($query);
+        }
+
+        $kolektor = $query->latest()->paginate(20);
 
         return view('master.kolektor.index', compact('kolektor'));
     }
@@ -40,22 +46,21 @@ class KolektorController extends Controller
             'desa'          => 'nullable|string|max:100',
             'kontak'        => 'nullable|string|max:50',
             'lokasi'        => 'nullable|string',
-            // Akun login (opsional — hanya jika diisi)
             'email'         => 'nullable|email|unique:users,email',
             'password'      => 'nullable|string|min:6|confirmed',
         ]);
 
-        DB::transaction(function () use ($request) {
-            $kolektor = MasterKolektor::create([
-                'nama_kolektor' => $request->nama_kolektor,
-                'alamat'        => $request->alamat,
-                'kecamatan'     => $request->kecamatan,
-                'desa'          => $request->desa,
-                'kontak'        => $request->kontak,
-                'lokasi'        => $request->lokasi,
-            ]);
+        $data = $request->only([
+            'nama_kolektor', 'alamat', 'kecamatan', 'desa', 'kontak', 'lokasi',
+        ]);
 
-            // Buat user login jika email diisi
+        if (AdminDesaScope::isAdminDesaOnly()) {
+            $data = AdminDesaScope::applyWilayahToData($data);
+        }
+
+        DB::transaction(function () use ($data, $request) {
+            $kolektor = MasterKolektor::create($data);
+
             if ($request->filled('email') && $request->filled('password')) {
                 $user = User::create([
                     'name'        => $request->nama_kolektor,
@@ -72,11 +77,15 @@ class KolektorController extends Controller
 
     public function edit(MasterKolektor $kolektor)
     {
+        AdminDesaScope::authorizeWilayahRecord($kolektor);
+
         return view('master.kolektor.edit', compact('kolektor'));
     }
 
     public function update(Request $request, MasterKolektor $kolektor)
     {
+        AdminDesaScope::authorizeWilayahRecord($kolektor);
+
         $request->validate([
             'nama_kolektor' => 'required|string|max:150',
             'alamat'        => 'nullable|string',
@@ -88,21 +97,21 @@ class KolektorController extends Controller
             'password'      => 'nullable|string|min:6|confirmed',
         ]);
 
-        DB::transaction(function () use ($request, $kolektor) {
-            $kolektor->update([
-                'nama_kolektor' => $request->nama_kolektor,
-                'alamat'        => $request->alamat,
-                'kecamatan'     => $request->kecamatan,
-                'desa'          => $request->desa,
-                'kontak'        => $request->kontak,
-                'lokasi'        => $request->lokasi,
-            ]);
+        $data = $request->only([
+            'nama_kolektor', 'alamat', 'kecamatan', 'desa', 'kontak', 'lokasi',
+        ]);
+
+        if (AdminDesaScope::isAdminDesaOnly()) {
+            $data = AdminDesaScope::applyWilayahToData($data);
+        }
+
+        DB::transaction(function () use ($request, $kolektor, $data) {
+            $kolektor->update($data);
 
             if ($request->filled('email')) {
                 $user = $kolektor->user;
 
                 if ($user) {
-                    // Update akun yang sudah ada
                     $updateData = [
                         'name'  => $request->nama_kolektor,
                         'email' => $request->email,
@@ -111,17 +120,14 @@ class KolektorController extends Controller
                         $updateData['password'] = Hash::make($request->password);
                     }
                     $user->update($updateData);
-                } else {
-                    // Buat akun baru jika belum punya
-                    if ($request->filled('password')) {
-                        $user = User::create([
-                            'name'        => $request->nama_kolektor,
-                            'email'       => $request->email,
-                            'password'    => Hash::make($request->password),
-                            'kolektor_id' => $kolektor->id,
-                        ]);
-                        $user->assignRole('kolektor');
-                    }
+                } elseif ($request->filled('password')) {
+                    $user = User::create([
+                        'name'        => $request->nama_kolektor,
+                        'email'       => $request->email,
+                        'password'    => Hash::make($request->password),
+                        'kolektor_id' => $kolektor->id,
+                    ]);
+                    $user->assignRole('kolektor');
                 }
             }
         });
@@ -131,8 +137,9 @@ class KolektorController extends Controller
 
     public function destroy(MasterKolektor $kolektor)
     {
+        AdminDesaScope::authorizeWilayahRecord($kolektor);
+
         DB::transaction(function () use ($kolektor) {
-            // Hapus user yang terhubung jika ada
             if ($kolektor->user) {
                 $kolektor->user->delete();
             }

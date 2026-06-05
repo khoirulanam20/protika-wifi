@@ -11,6 +11,7 @@ use App\Models\MasterTeknisi;
 use App\Models\MasterPenagih;
 use App\Models\Tagihan;
 use App\Models\User;
+use App\Support\AdminDesaScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -22,19 +23,28 @@ class PelangganController extends Controller
     public function index(Request $request)
     {
         $isKolektorOnly = auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin');
+        $isAdminDesaOnly = AdminDesaScope::isAdminDesaOnly();
         $query = MasterPelanggan::with(['dusun', 'bulanan', 'kolektor', 'teknisi', 'penagih']);
 
         if ($isKolektorOnly) {
             $query->where('kolektor_id', auth()->user()->kolektor_id);
+        } elseif ($isAdminDesaOnly) {
+            AdminDesaScope::applyPelangganScope($query);
         }
 
         $query->when($request->search, function($q, $v) {
             $q->where('nama_pelanggan', 'like', "%$v%");
-        })->when($request->kecamatan, function($q, $v) {
-            $q->where('kecamatan', $v);
-        })->when($request->desa, function($q, $v) {
-            $q->where('desa', $v);
-        })->when($request->dusun_id, function($q, $v) {
+        });
+
+        if (!$isAdminDesaOnly) {
+            $query->when($request->kecamatan, function($q, $v) {
+                $q->where('kecamatan', $v);
+            })->when($request->desa, function($q, $v) {
+                $q->where('desa', $v);
+            });
+        }
+
+        $query->when($request->dusun_id, function($q, $v) {
             $q->where('dusun_id', $v);
         })->when($request->status_alat, function($q, $v) {
             $q->where('status_alat', $v);
@@ -59,6 +69,8 @@ class PelangganController extends Controller
         $scopeQuery = MasterPelanggan::query();
         if ($isKolektorOnly) {
             $scopeQuery->where('kolektor_id', auth()->user()->kolektor_id);
+        } elseif ($isAdminDesaOnly) {
+            AdminDesaScope::applyPelangganScope($scopeQuery);
         } elseif ($request->kolektor_id) {
             $scopeQuery->where('kolektor_id', $request->kolektor_id);
         }
@@ -90,7 +102,9 @@ class PelangganController extends Controller
         $dusunOptionsQuery = MasterDusun::query()
             ->select('id', 'dusun', 'desa', 'kecamatan');
 
-        if (!empty($kecamatanList)) {
+        if ($isAdminDesaOnly) {
+            AdminDesaScope::applyDusunScope($dusunOptionsQuery);
+        } elseif (!empty($kecamatanList)) {
             $dusunOptionsQuery->whereIn('kecamatan', $kecamatanList);
         } else {
             $dusunOptionsQuery->whereRaw('1 = 0');
@@ -116,10 +130,13 @@ class PelangganController extends Controller
         
         if ($isKolektorOnly) {
             $kolektor = MasterKolektor::where('id', auth()->user()->kolektor_id)->get();
+        } elseif ($isAdminDesaOnly) {
+            $kolektorQuery = MasterKolektor::query();
+            AdminDesaScope::applyWilayahMasterScope($kolektorQuery);
+            $kolektor = $kolektorQuery->get();
         } else {
             $kolektor = MasterKolektor::all();
         }
-        $penagih = MasterPenagih::all();
 
         return view('master.pelanggan.index', compact(
             'pelanggan',
@@ -130,7 +147,8 @@ class PelangganController extends Controller
             'bulanan',
             'kolektor',
             'teknisi',
-            'penagih'
+            'penagih',
+            'isAdminDesaOnly'
         ));
     }
 
@@ -156,6 +174,7 @@ class PelangganController extends Controller
             'nama_pelanggan'    => 'required|string|max:150',
             'kecamatan'         => 'nullable|string|max:100',
             'desa'              => 'nullable|string|max:100',
+            'desa_kode'         => 'nullable|string|max:13|exists:wilayah,kode',
             'dusun_id'          => 'nullable|exists:master_dusun,id',
             'bulanan_id'        => 'nullable|exists:master_bulanan,id',
             'tanggal_pemasangan'=> 'nullable|date',
@@ -170,6 +189,9 @@ class PelangganController extends Controller
 
         if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
             $data['kolektor_id'] = auth()->user()->kolektor_id;
+        }
+        if (AdminDesaScope::isAdminDesaOnly()) {
+            $data = AdminDesaScope::applyWilayahToData($data);
         }
         $data['is_active'] = $request->boolean('is_active', true);
         $data = $this->applyActiveStatusTransition($data);
@@ -194,10 +216,9 @@ class PelangganController extends Controller
 
     public function edit(MasterPelanggan $pelanggan)
     {
+        $this->authorizePelangganAccess($pelanggan);
+
         if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
-            if ($pelanggan->kolektor_id !== auth()->user()->kolektor_id) {
-                abort(403, 'Anda tidak memiliki akses ke pelanggan ini.');
-            }
             $kolektor = MasterKolektor::where('id', auth()->user()->kolektor_id)->get();
         } else {
             $kolektor = MasterKolektor::all();
@@ -212,15 +233,12 @@ class PelangganController extends Controller
 
     public function update(Request $request, MasterPelanggan $pelanggan)
     {
-        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
-            if ($pelanggan->kolektor_id !== auth()->user()->kolektor_id) {
-                abort(403, 'Anda tidak memiliki akses ke pelanggan ini.');
-            }
-        }
+        $this->authorizePelangganAccess($pelanggan);
         $data = $request->validate([
             'nama_pelanggan'    => 'required|string|max:150',
             'kecamatan'         => 'nullable|string|max:100',
             'desa'              => 'nullable|string|max:100',
+            'desa_kode'         => 'nullable|string|max:13|exists:wilayah,kode',
             'dusun_id'          => 'nullable|exists:master_dusun,id',
             'bulanan_id'        => 'nullable|exists:master_bulanan,id',
             'tanggal_pemasangan'=> 'nullable|date',
@@ -235,6 +253,9 @@ class PelangganController extends Controller
 
         if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
             $data['kolektor_id'] = auth()->user()->kolektor_id;
+        }
+        if (AdminDesaScope::isAdminDesaOnly()) {
+            $data = AdminDesaScope::applyWilayahToData($data);
         }
         $data['is_active'] = $request->boolean('is_active', true);
         $data = $this->applyActiveStatusTransition($data, $pelanggan);
@@ -254,11 +275,7 @@ class PelangganController extends Controller
 
     public function destroy(MasterPelanggan $pelanggan)
     {
-        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
-            if ($pelanggan->kolektor_id !== auth()->user()->kolektor_id) {
-                abort(403, 'Anda tidak memiliki akses ke pelanggan ini.');
-            }
-        }
+        $this->authorizePelangganAccess($pelanggan);
         $pelanggan->delete();
         return redirect()->route('master.pelanggan.index')->with('success', 'Pelanggan berhasil dihapus.');
     }
@@ -361,5 +378,10 @@ class PelangganController extends Controller
                 abort(403, 'Anda tidak memiliki akses ke pelanggan ini.');
             }
         }
+
+        if (AdminDesaScope::isAdminDesaOnly() && !AdminDesaScope::pelangganInScope($pelanggan)) {
+            abort(403, 'Anda tidak memiliki akses ke pelanggan ini.');
+        }
     }
+
 }

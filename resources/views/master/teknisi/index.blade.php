@@ -143,7 +143,11 @@
                             <label class="block text-content-secondary text-sm mb-2">Alamat Lengkap</label>
                             <textarea name="alamat" rows="3" x-model="formData.alamat" class="input-field"></textarea>
                         </div>
+                        @hasanyrole('superadmin|kolektor')
                         @include('layouts.components.wilayah-api')
+                        @else
+                        @include('layouts.components.wilayah-fixed-admin-desa')
+                        @endhasanyrole
                         <div>
                             <label class="block text-content-secondary text-sm mb-2">Kontak / No. HP</label>
                             <input type="text" name="kontak" x-model="formData.kontak" class="input-field" placeholder="08xxxxxxxxxx">

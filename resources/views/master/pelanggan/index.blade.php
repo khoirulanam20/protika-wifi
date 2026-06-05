@@ -31,6 +31,7 @@
                         class="input-field w-full" />
 
                     <div class="grid grid-cols-2 gap-3 md:flex md:flex-wrap md:items-end md:gap-3">
+                        @unlessrole('admin_desa')
                         <select name="kecamatan" x-model="filterData.kecamatan"
                             class="input-field w-full min-w-0 md:flex-1 md:min-w-[9rem] md:max-w-[11rem]">
                             <option value="">Semua Kecamatan</option>
@@ -45,6 +46,7 @@
                                 <option :value="ds" x-text="ds"></option>
                             </template>
                         </select>
+                        @endunlessrole
                         <select name="dusun_id" x-model="filterData.dusun_id"
                             class="input-field w-full min-w-0 md:flex-1 md:min-w-[9rem] md:max-w-[11rem]">
                             <option value="">Semua Dusun</option>
@@ -285,12 +287,16 @@
                                     @enderror
                                 </div>
 
+                                @hasanyrole('superadmin|kolektor')
                                 @include('layouts.components.wilayah-api')
+                                @else
+                                @include('layouts.components.wilayah-fixed-admin-desa', ['withDesaKode' => true])
+                                @endhasanyrole
 
                                 <div>
                                     <label class="block text-content-secondary text-sm mb-2">Dusun / Wilayah</label>
                                     <select name="dusun_id" x-model="formData.dusun_id" class="input-field"
-                                        :disabled="!formData.desa">
+                                        @unlessrole('admin_desa') :disabled="!formData.desa" @endunlessrole>
                                         <option value="">Pilih Dusun</option>
                                         <template x-for="d in filteredDusun" :key="d.id">
                                             <option :value="d.id" x-text="d.dusun"></option>
@@ -418,9 +424,19 @@
 
 @push('scripts')
     @once
+        @php
+            $adminWilayahForJs = auth()->user()->hasRole('admin_desa') && auth()->user()->adminDesa
+                ? [
+                    'kecamatan' => auth()->user()->adminDesa->kecamatan,
+                    'desa' => auth()->user()->adminDesa->desa,
+                    'desa_kode' => auth()->user()->adminDesa->desa_kode,
+                ]
+                : null;
+        @endphp
         <script>
             document.addEventListener('alpine:init', () => {
                 Alpine.data('pelangganData', () => ({
+                    adminWilayah: @json($adminWilayahForJs),
                     showModal: {{ $errors->any() ? 'true' : 'false' }},
                     showStatusModal: false,
                     statusActionUrl: '',
@@ -519,6 +535,11 @@
                             bulanan_id: '', kolektor_id: '{{ auth()->user()->hasRole("kolektor") && !auth()->user()->hasRole("superadmin") ? auth()->user()->kolektor_id : "" }}', teknisi_id: '', status_alat: 'pinjam', is_active: '1', tanggal_pemasangan: '',
                             kontak: '', lokasi: ''
                         };
+                        if (this.adminWilayah && this.adminWilayah.desa_kode) {
+                            this.formData.kecamatan = this.adminWilayah.kecamatan || '';
+                            this.formData.desa = this.adminWilayah.desa || '';
+                            this.formData.desa_kode = this.adminWilayah.desa_kode;
+                        }
                         this.showModal = true;
                     },
 

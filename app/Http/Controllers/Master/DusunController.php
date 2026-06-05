@@ -4,13 +4,21 @@ namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
 use App\Models\MasterDusun;
+use App\Support\AdminDesaScope;
 use Illuminate\Http\Request;
 
 class DusunController extends Controller
 {
     public function index()
     {
-        $dusun = MasterDusun::latest()->paginate(20);
+        $query = MasterDusun::query();
+
+        if (AdminDesaScope::isAdminDesaOnly()) {
+            AdminDesaScope::applyDusunScope($query);
+        }
+
+        $dusun = $query->latest()->paginate(20);
+
         return view('master.dusun.index', compact('dusun'));
     }
 
@@ -28,6 +36,13 @@ class DusunController extends Controller
             'dusun' => 'required|string|max:100',
         ]);
 
+        if (AdminDesaScope::isAdminDesaOnly()) {
+            $data['desa_kode'] = AdminDesaScope::desaKode();
+            $labels = AdminDesaScope::wilayahLabels();
+            $data['kecamatan'] = $labels['kecamatan'] ?? $data['kecamatan'];
+            $data['desa'] = $labels['desa'] ?? $data['desa'];
+        }
+
         MasterDusun::create($data);
 
         return redirect()->route('master.dusun.index')->with('success', 'Dusun berhasil ditambahkan');
@@ -35,17 +50,28 @@ class DusunController extends Controller
 
     public function edit(MasterDusun $dusun)
     {
+        $this->authorizeDusunAccess($dusun);
+
         return view('master.dusun.edit', compact('dusun'));
     }
 
     public function update(Request $request, MasterDusun $dusun)
     {
+        $this->authorizeDusunAccess($dusun);
+
         $data = $request->validate([
             'kecamatan' => 'required|string|max:100',
             'desa' => 'required|string|max:100',
             'desa_kode' => 'nullable|string|max:13|exists:wilayah,kode',
             'dusun' => 'required|string|max:100',
         ]);
+
+        if (AdminDesaScope::isAdminDesaOnly()) {
+            $data['desa_kode'] = AdminDesaScope::desaKode();
+            $labels = AdminDesaScope::wilayahLabels();
+            $data['kecamatan'] = $labels['kecamatan'] ?? $data['kecamatan'];
+            $data['desa'] = $labels['desa'] ?? $data['desa'];
+        }
 
         $dusun->update($data);
 
@@ -54,7 +80,17 @@ class DusunController extends Controller
 
     public function destroy(MasterDusun $dusun)
     {
+        $this->authorizeDusunAccess($dusun);
+
         $dusun->delete();
+
         return redirect()->route('master.dusun.index')->with('success', 'Dusun berhasil dihapus');
+    }
+
+    private function authorizeDusunAccess(MasterDusun $dusun): void
+    {
+        if (AdminDesaScope::isAdminDesaOnly() && $dusun->desa_kode !== AdminDesaScope::desaKode()) {
+            abort(403, 'Anda tidak memiliki akses ke data dusun ini.');
+        }
     }
 }

@@ -5,6 +5,7 @@ use App\Http\Controllers\Master\PelangganController;
 use App\Http\Controllers\Master\DusunController;
 use App\Http\Controllers\Master\BulanController;
 use App\Http\Controllers\Master\KolektorController;
+use App\Http\Controllers\Master\AdminDesaController;
 use App\Http\Controllers\Master\TeknisiController;
 use App\Http\Controllers\Master\PenagihController;
 use App\Http\Controllers\Master\UserController;
@@ -26,7 +27,9 @@ Route::prefix('api/wilayah')->middleware(['auth'])->group(function () {
 require __DIR__ . '/auth.php';
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->middleware(['role:superadmin|kolektor|admin_desa'])
+        ->name('dashboard');
 
     // Profile Routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -34,23 +37,25 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
 
-    Route::middleware(['role:superadmin|kolektor'])->prefix('master')->name('master.')->group(function () {
+    Route::middleware(['role:superadmin|kolektor|admin_desa'])->prefix('master')->name('master.')->group(function () {
         Route::resource('pelanggan',  PelangganController::class);
         Route::post('pelanggan/{pelanggan}/nonaktif', [PelangganController::class, 'nonaktifkan'])->name('pelanggan.nonaktif');
         Route::post('pelanggan/{pelanggan}/aktifkan', [PelangganController::class, 'aktifkan'])->name('pelanggan.aktifkan');
         Route::resource('dusun',      DusunController::class);
         Route::resource('bulanan',    BulanController::class);
-
+        Route::resource('kolektor',   KolektorController::class);
         Route::resource('teknisi',    TeknisiController::class);
         Route::resource('penagih',    PenagihController::class);
-        
+
         Route::middleware(['role:superadmin'])->group(function () {
-            Route::resource('kolektor',   KolektorController::class);
+            Route::resource('admin-desa', AdminDesaController::class)
+                ->except(['create', 'show', 'edit'])
+                ->parameters(['admin-desa' => 'adminDesa']);
             Route::resource('users',      UserController::class);
         });
     });
 
-    Route::middleware(['role:superadmin|kolektor'])->group(function () {
+    Route::middleware(['role:superadmin|kolektor|admin_desa'])->group(function () {
         Route::get('/tagihan/rekap',      [RekapController::class, 'index'])->name('tagihan.rekap');
         Route::post('/tagihan/lunas-banyak', [TagihanController::class, 'lunaskanBanyak'])->name('tagihan.lunas-banyak');
         Route::get('/tagihan/rekap/export', [RekapController::class, 'export'])->name('tagihan.rekap.export')

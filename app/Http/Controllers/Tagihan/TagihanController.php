@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Tagihan;
 use App\Models\MasterPelanggan;
 use App\Models\User;
+use App\Support\AdminDesaScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\TagihanTerbayarNotification;
@@ -21,8 +22,10 @@ class TagihanController extends Controller
 
         $query = Tagihan::with(['pelanggan.bulanan', 'pelanggan', 'kolektor']);
 
-        if (auth()->user()->hasRole('kolektor')) {
+        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
             $query->where('kolektor_id', auth()->user()->kolektor_id);
+        } elseif (AdminDesaScope::isAdminDesaOnly()) {
+            AdminDesaScope::applyTagihanScope($query);
         }
 
         // Generate tagihan otomatis yang belum ada untuk pelanggan aktif
@@ -32,7 +35,10 @@ class TagihanController extends Controller
               ->when($tahun,              fn($q, $v) => $q->where('tahun',  $v))
               ->when($request->status,   fn($q, $v) => $q->where('status', $v))
               ->when($request->search,   fn($q, $v) => $q->whereHas('pelanggan', fn($p) => $p->where('nama_pelanggan', 'like', "%$v%")))
-              ->when($request->kecamatan, fn($q, $v) => $q->whereHas('pelanggan', fn($p) => $p->where('kecamatan', $v)))
+              ->when(
+                  $request->kecamatan && !AdminDesaScope::isAdminDesaOnly(),
+                  fn($q, $v) => $q->whereHas('pelanggan', fn($p) => $p->where('kecamatan', $v))
+              )
               ->when($request->kolektor_id && auth()->user()->hasRole('superadmin'), fn($q, $v) => $q->where('kolektor_id', $v));
 
         $tagihan = $query->latest()->paginate(20)->withQueryString();
@@ -49,9 +55,12 @@ class TagihanController extends Controller
 
         $kecamatanQuery = MasterPelanggan::distinct()->select('kecamatan')->whereNotNull('kecamatan');
 
-        if (auth()->user()->hasRole('kolektor')) {
+        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
             $tunggakanQuery->where('kolektor_id', auth()->user()->kolektor_id);
             $kecamatanQuery->where('kolektor_id', auth()->user()->kolektor_id);
+        } elseif (AdminDesaScope::isAdminDesaOnly()) {
+            AdminDesaScope::applyTagihanScope($tunggakanQuery);
+            AdminDesaScope::applyPelangganScope($kecamatanQuery);
         }
 
         $totalTunggakan = $tunggakanQuery->count();
@@ -76,6 +85,8 @@ class TagihanController extends Controller
 
     public function edit(Tagihan $tagihan)
     {
+        $this->authorizeTagihanAccess($tagihan);
+
         return view('tagihan.edit', compact('tagihan'));
     }
 
@@ -85,6 +96,8 @@ class TagihanController extends Controller
      */
     public function update(Request $request, Tagihan $tagihan)
     {
+        $this->authorizeTagihanAccess($tagihan);
+
         $rules = [
             'status'       => 'required|in:lunas,belum_lunas,sebagian',
             'tanggal_bayar'=> 'nullable|date',
@@ -140,6 +153,8 @@ class TagihanController extends Controller
      */
     public function lunaskanCepat(Tagihan $tagihan)
     {
+        $this->authorizeTagihanAccess($tagihan);
+
         // Hanya bisa dilunaskan jika belum lunas
         if ($tagihan->status === 'lunas') {
             return redirect()->back()->with('info', 'Tagihan sudah lunas.');
@@ -161,6 +176,8 @@ class TagihanController extends Controller
      */
     public function batalLunas(Tagihan $tagihan)
     {
+        $this->authorizeTagihanAccess($tagihan);
+
         if ($tagihan->status !== 'lunas') {
             return redirect()->back()->with('info', 'Tagihan belum berstatus lunas.');
         }
@@ -185,9 +202,16 @@ class TagihanController extends Controller
             'tagihan_ids.*' => 'exists:tagihan,id'
         ]);
 
-        $tagihans = Tagihan::whereIn('id', $request->tagihan_ids)
-            ->where('status', '!=', 'lunas')
-            ->get();
+        $tagihansQuery = Tagihan::whereIn('id', $request->tagihan_ids)
+            ->where('status', '!=', 'lunas');
+
+        if (AdminDesaScope::isAdminDesaOnly()) {
+            AdminDesaScope::applyTagihanScope($tagihansQuery);
+        } elseif (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
+            $tagihansQuery->where('kolektor_id', auth()->user()->kolektor_id);
+        }
+
+        $tagihans = $tagihansQuery->get();
 
         $count = 0;
         foreach ($tagihans as $tagihan) {
@@ -205,7 +229,8 @@ class TagihanController extends Controller
 
     public function destroy(Tagihan $tagihan)
     {
-        // Hanya superadmin
+        $this->authorizeTagihanAccess($tagihan);
+
         $tagihan->delete();
         return redirect()->route('tagihan.index')->with('success', 'Tagihan berhasil dihapus.');
     }
@@ -226,8 +251,10 @@ class TagihanController extends Controller
                     ->orWhereDate('aktif_kembali_at', '<=', $now->toDateString());
             });
 
-        if ($user->hasRole('kolektor')) {
+        if ($user->hasRole('kolektor') && !$user->hasRole('superadmin')) {
             $query->where('kolektor_id', $user->kolektor_id);
+        } elseif (AdminDesaScope::isAdminDesaOnly()) {
+            AdminDesaScope::applyPelangganScope($query);
         }
 
         $pelangganList = $query->get();
@@ -248,6 +275,21 @@ class TagihanController extends Controller
     /**
      * Helper to notify superadmin and kolektor when tagihan is paid
      */
+    private function authorizeTagihanAccess(Tagihan $tagihan): void
+    {
+        $tagihan->loadMissing('pelanggan.dusun');
+
+        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
+            if ($tagihan->kolektor_id !== auth()->user()->kolektor_id) {
+                abort(403, 'Anda tidak memiliki akses ke tagihan ini.');
+            }
+        }
+
+        if (AdminDesaScope::isAdminDesaOnly() && !AdminDesaScope::pelangganInScope($tagihan->pelanggan)) {
+            abort(403, 'Anda tidak memiliki akses ke tagihan ini.');
+        }
+    }
+
     private function notifyTagihanTerbayar(Tagihan $tagihan): void
     {
         $superadmins = User::role('superadmin')->get();

@@ -143,7 +143,11 @@
                     <input type="hidden" name="_method" :value="formMethod">
 
                     <div class="p-6 space-y-4">
+                        @hasanyrole('superadmin|kolektor')
                         @include('layouts.components.wilayah-api')
+                        @else
+                        @include('layouts.components.wilayah-fixed-admin-desa', ['withDesaKode' => true])
+                        @endhasanyrole
 
                         <div>
                             <label class="block text-content-secondary text-sm mb-2">Nama Dusun</label>

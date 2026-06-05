@@ -58,12 +58,14 @@
             <form method="GET" class="px-4 md:px-6 py-3 md:py-4 border-b border-border flex flex-wrap gap-2 md:gap-3 bg-base-page">
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama pelanggan..."
                     class="input-field flex-1 min-w-40 text-sm">
+                @unlessrole('admin_desa')
                 <select name="kecamatan" class="input-field w-32 md:w-40 text-sm">
                     <option value="">Semua Kec.</option>
                     @foreach($kecamatanList as $kec)
                         <option value="{{ $kec }}" {{ request('kecamatan') == $kec ? 'selected' : '' }}>{{ $kec }}</option>
                     @endforeach
                 </select>
+                @endunlessrole
                 @role('superadmin')
                 <select name="kolektor_id" class="input-field w-28 md:w-36 text-sm">
                     <option value="">Semua Kol.</option>

@@ -8,7 +8,7 @@ class MasterPelanggan extends Model
 {
     protected $table = 'master_pelanggan';
     protected $fillable = [
-        'nama_pelanggan', 'kecamatan', 'desa', 'dusun_id', 'bulanan_id',
+        'nama_pelanggan', 'kecamatan', 'desa', 'desa_kode', 'dusun_id', 'bulanan_id',
         'tanggal_pemasangan', 'kolektor_id', 'teknisi_id', 'penagih_id', 'status_alat',
         'is_active', 'nonaktif_at', 'aktif_kembali_at', 'kontak', 'lokasi'
     ];

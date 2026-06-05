@@ -141,7 +141,11 @@
                             <label class="block text-content-secondary text-sm mb-2">Alamat Lengkap</label>
                             <textarea name="alamat" rows="3" x-model="formData.alamat" class="input-field"></textarea>
                         </div>
+                        @hasanyrole('superadmin|kolektor')
                         @include('layouts.components.wilayah-api')
+                        @else
+                        @include('layouts.components.wilayah-fixed-admin-desa')
+                        @endhasanyrole
                     </div>
 
                     <div class="px-6 py-4 border-t border-border flex justify-end gap-3 bg-base-page">

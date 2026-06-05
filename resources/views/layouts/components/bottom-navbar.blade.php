@@ -8,12 +8,14 @@
             <span class="text-[10px] font-medium">Dashboard</span>
         </a>
 
+        @hasanyrole('superadmin|kolektor|admin_desa')
         <a href="{{ route('tagihan.index') }}" class="flex flex-col items-center justify-center w-full h-full space-y-1 {{ request()->is('tagihan*') ? 'text-primary' : 'text-content-secondary' }}">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <span class="text-[10px] font-medium">Tagihan</span>
         </a>
+        @endhasanyrole
 
         <button @click="mobileMenuOpen = !mobileMenuOpen" class="flex flex-col items-center justify-center w-full h-full space-y-1 text-content-secondary">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,7 +53,10 @@
                 </div>
                 <div>
                     <h3 class="text-sm font-semibold text-content-primary">{{ auth()->user()->name }}</h3>
-                    <p class="text-xs text-content-secondary">{{ ucfirst(auth()->user()->getRoleNames()->first() ?? 'User') }}</p>
+                    <p class="text-xs text-content-secondary">
+                        @php $r = auth()->user()->getRoleNames()->first(); @endphp
+                        {{ $r === 'admin_desa' ? 'Admin Desa' : ucfirst($r ?? 'User') }}
+                    </p>
                 </div>
             </div>
             <button @click="mobileMenuOpen = false" class="p-2 text-content-tertiary hover:bg-gray-100 rounded-full">
@@ -62,33 +67,21 @@
         </div>
         
         <div class="space-y-4 pb-20">
-            @hasanyrole('superadmin|kolektor')
+            @hasanyrole('superadmin|kolektor|admin_desa')
             <div>
                 <p class="text-xs font-semibold text-content-tertiary uppercase tracking-wider mb-2">Master Data</p>
                 <div class="space-y-1">
-                    <a href="{{ route('master.pelanggan.index') }}" class="block px-3 py-2 rounded-lg text-sm text-content-secondary hover:bg-primary/5 hover:text-primary">Pelanggan</a>
-                    <a href="{{ route('master.dusun.index') }}" class="block px-3 py-2 rounded-lg text-sm text-content-secondary hover:bg-primary/5 hover:text-primary">Wilayah</a>
-                    <a href="{{ route('master.bulanan.index') }}" class="block px-3 py-2 rounded-lg text-sm text-content-secondary hover:bg-primary/5 hover:text-primary">Paket Bulanan</a>
-                    @role('superadmin')
-                    <a href="{{ route('master.kolektor.index') }}" class="block px-3 py-2 rounded-lg text-sm text-content-secondary hover:bg-primary/5 hover:text-primary">Kolektor</a>
-                    @endrole
-                    <a href="{{ route('master.teknisi.index') }}" class="block px-3 py-2 rounded-lg text-sm text-content-secondary hover:bg-primary/5 hover:text-primary">Teknisi</a>
-                    <a href="{{ route('master.penagih.index') }}" class="block px-3 py-2 rounded-lg text-sm text-content-secondary hover:bg-primary/5 hover:text-primary">Penagih</a>
-                    @role('superadmin')
-                    <a href="{{ route('master.users.index') }}" class="block px-3 py-2 rounded-lg text-sm text-content-secondary hover:bg-primary/5 hover:text-primary">Pengguna</a>
-                    @endrole
+                    @include('layouts.components.nav-master-links', ['class' => 'block px-3 py-2 rounded-lg text-sm text-content-secondary hover:bg-primary/5 hover:text-primary'])
                 </div>
             </div>
-            @endhasanyrole
-            
-            @role('superadmin')
             <div>
                 <p class="text-xs font-semibold text-content-tertiary uppercase tracking-wider mb-2">Tagihan</p>
                 <div class="space-y-1">
+                    <a href="{{ route('tagihan.index') }}" class="block px-3 py-2 rounded-lg text-sm text-content-secondary hover:bg-primary/5 hover:text-primary">Daftar Tagihan</a>
                     <a href="{{ route('tagihan.rekap') }}" class="block px-3 py-2 rounded-lg text-sm text-content-secondary hover:bg-primary/5 hover:text-primary">Rekap & Laporan</a>
                 </div>
             </div>
-            @endrole
+            @endhasanyrole
 
             <div>
                 <p class="text-xs font-semibold text-content-tertiary uppercase tracking-wider mb-2">Akun</p>
