@@ -65,4 +65,29 @@ class Tagihan extends Model
         if ($this->tahun == $now->year && $this->bulan < $now->month) return true;
         return false;
     }
+
+    public function getIsPelunasanPrevAttribute(): bool
+    {
+        return (bool) ($this->attributes['is_pelunasan_prev'] ?? false);
+    }
+
+    public function getStatusDisplayAttribute(): string
+    {
+        if ($this->is_pelunasan_prev) {
+            return 'pelunasan_bulan_sebelumnya';
+        }
+
+        return $this->status;
+    }
+
+    public function getStatusDisplayLabelAttribute(): string
+    {
+        return match ($this->status_display) {
+            'lunas' => 'Lunas',
+            'belum_lunas' => 'Belum Lunas',
+            'sebagian' => 'Sebagian',
+            'pelunasan_bulan_sebelumnya' => 'Pelunasan bulan sebelumnya',
+            default => $this->status,
+        };
+    }
 }

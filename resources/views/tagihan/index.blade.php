@@ -46,12 +46,12 @@
             :active-count="$activeFilterCount"
             :show-search="true"
             search-placeholder="Cari nama pelanggan..."
-            :show-reset="request()->hasAny(['search', 'status', 'bulan', 'tahun', 'kecamatan', 'desa', 'dusun_id', 'kolektor_id'])"
+            :show-reset="request()->hasAny(['search', 'status', 'bulan', 'kecamatan', 'desa', 'dusun_id', 'kolektor_id'])"
             :kecamatan-list="$kecamatanList"
             :desa-options="$desaOptions"
             :dusun-options="$dusunOptions"
             :show-wilayah-dusun="true">
-            @role('superadmin')
+            @unlessrole('kolektor')
             <div class="w-full md:w-auto space-y-1">
                 <label class="block text-xs font-medium text-content-secondary md:hidden">Kolektor</label>
                 <select name="kolektor_id" class="input-field w-full md:w-36 text-sm">
@@ -61,7 +61,7 @@
                     @endforeach
                 </select>
             </div>
-            @endrole
+            @endunlessrole
             <div class="w-full md:w-auto space-y-1">
                 <label class="block text-xs font-medium text-content-secondary md:hidden">Bulan</label>
                 <select name="bulan" class="input-field w-full md:w-32 text-sm">
@@ -69,14 +69,6 @@
                         <option value="{{ $m }}" {{ $bulan == $m ? 'selected' : '' }}>
                             {{ date('M', mktime(0, 0, 0, $m, 1)) }}
                         </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="w-full md:w-auto space-y-1">
-                <label class="block text-xs font-medium text-content-secondary md:hidden">Tahun</label>
-                <select name="tahun" class="input-field w-full md:w-24 text-sm">
-                    @foreach(range(now()->year - 2, now()->year + 1) as $y)
-                        <option value="{{ $y }}" {{ $tahun == $y ? 'selected' : '' }}>{{ $y }}</option>
                     @endforeach
                 </select>
             </div>

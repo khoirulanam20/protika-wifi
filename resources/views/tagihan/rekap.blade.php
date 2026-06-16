@@ -6,13 +6,13 @@
 
 @section('content')
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <div class="card p-6">
         <p class="text-content-tertiary text-xs font-medium uppercase mb-1">Total Omzet</p>
         <p class="text-content-primary text-3xl font-bold">Rp {{ number_format($totalOmzet, 0, ',', '.') }}</p>
         <p class="text-content-tertiary text-xs mt-2">
             @if($bulan && $tahun)
-                Periode {{ \Carbon\Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F Y') }}
+                Tagihan periode {{ \Carbon\Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F Y') }}
             @elseif($bulan)
                 Bulan {{ \Carbon\Carbon::createFromDate(now()->year, $bulan, 1)->translatedFormat('F') }}
             @elseif($tahun)
@@ -26,16 +26,19 @@
     <div class="card p-6">
         <p class="text-content-tertiary text-xs font-medium uppercase mb-1">Total Piutang</p>
         <p class="text-content-primary text-3xl font-bold">Rp {{ number_format($totalPiutang, 0, ',', '.') }}</p>
-        <p class="text-content-tertiary text-xs mt-2">Sisa tagihan belum terbayar sesuai filter</p>
+        <p class="text-content-tertiary text-xs mt-2">Sisa tagihan belum terbayar periode filter</p>
     </div>
-</div>
-
+    <div class="card p-6">
+        <p class="text-content-tertiary text-xs font-medium uppercase mb-1">Pelunasan Bulan Sebelumnya</p>
+        <p class="text-content-primary text-3xl font-bold">Rp {{ number_format($totalPelunasanPrev, 0, ',', '.') }}</p>
+        <p class="text-content-tertiary text-xs mt-2">Tagihan bulan lalu dibayar pada periode filter</p>
+    </div>
 </div>
 
 <x-list-filter-bar
     :reset-url="route('tagihan.rekap')"
     :active-count="$activeFilterCount"
-    :show-reset="request()->hasAny(['bulan', 'tahun', 'kecamatan', 'desa', 'dusun_id', 'kolektor_id'])"
+    :show-reset="request()->hasAny(['bulan', 'tahun', 'kecamatan', 'desa', 'dusun_id', 'kolektor_id', 'status'])"
     :kecamatan-list="$kecamatanList"
     :desa-options="$desaOptions"
     :dusun-options="$dusunOptions"
@@ -60,7 +63,17 @@
             @endforeach
         </select>
     </div>
-    @role('superadmin')
+    <div class="w-full md:w-auto space-y-1">
+        <label class="block text-xs font-medium text-content-secondary md:hidden">Status</label>
+        <select name="status" class="input-field w-full md:w-52">
+            <option value="">Semua Status</option>
+            <option value="lunas" {{ request('status') === 'lunas' ? 'selected' : '' }}>Lunas</option>
+            <option value="belum_lunas" {{ request('status') === 'belum_lunas' ? 'selected' : '' }}>Belum Lunas</option>
+            <option value="sebagian" {{ request('status') === 'sebagian' ? 'selected' : '' }}>Sebagian</option>
+            <option value="pelunasan_bulan_sebelumnya" {{ request('status') === 'pelunasan_bulan_sebelumnya' ? 'selected' : '' }}>Pelunasan bulan sebelumnya</option>
+        </select>
+    </div>
+    @unlessrole('kolektor')
     <div class="w-full md:w-auto space-y-1">
         <label class="block text-xs font-medium text-content-secondary md:hidden">Kolektor</label>
         <select name="kolektor_id" class="input-field w-full md:w-48">
@@ -70,7 +83,7 @@
             @endforeach
         </select>
     </div>
-    @endrole
+    @endunlessrole
 </x-list-filter-bar>
 
 <div class="card overflow-hidden">
@@ -92,7 +105,8 @@
                 <tr class="text-content-tertiary text-left border-b border-border">
                     <th class="px-6 py-4 font-semibold uppercase tracking-wider">Pelanggan</th>
                     <th class="px-6 py-4 font-semibold uppercase tracking-wider">Kolektor</th>
-                    <th class="px-6 py-4 font-semibold uppercase tracking-wider">Periode</th>
+                    <th class="px-6 py-4 font-semibold uppercase tracking-wider">Periode Tagihan</th>
+                    <th class="px-6 py-4 font-semibold uppercase tracking-wider">Tanggal Bayar</th>
                     <th class="px-6 py-4 font-semibold uppercase tracking-wider text-right">Nominal</th>
                     <th class="px-6 py-4 font-semibold uppercase tracking-wider">Status</th>
                 </tr>
@@ -103,17 +117,28 @@
                     <td class="px-6 py-4 text-content-primary">{{ $item->pelanggan->nama_pelanggan }}</td>
                     <td class="px-6 py-4 text-content-secondary">{{ $item->kolektor?->nama_kolektor ?? '—' }}</td>
                     <td class="px-6 py-4 text-content-secondary">{{ $item->bulan }}/{{ $item->tahun }}</td>
+                    <td class="px-6 py-4 text-content-secondary">
+                        {{ $item->tanggal_bayar ? $item->tanggal_bayar->format('d/m/Y') : '—' }}
+                    </td>
                     <td class="px-6 py-4 text-content-primary text-right font-medium">Rp {{ number_format($item->nominal, 0, ',', '.') }}</td>
                     <td class="px-6 py-4">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase
-                                     {{ $item->status === 'lunas' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400' }}">
-                            {{ $item->status }}
+                        @php
+                            $statusDisplay = $item->status_display;
+                            $statusClass = match ($statusDisplay) {
+                                'lunas' => 'bg-emerald-500/20 text-emerald-400',
+                                'sebagian' => 'bg-amber-500/20 text-amber-400',
+                                'pelunasan_bulan_sebelumnya' => 'bg-blue-500/20 text-blue-400',
+                                default => 'bg-red-500/20 text-red-400',
+                            };
+                        @endphp
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase {{ $statusClass }}">
+                            {{ $item->status_display_label }}
                         </span>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="px-6 py-10 text-center text-content-tertiary">Data tidak ditemukan.</td>
+                    <td colspan="6" class="px-6 py-10 text-center text-content-tertiary">Data tidak ditemukan.</td>
                 </tr>
                 @endforelse
             </tbody>

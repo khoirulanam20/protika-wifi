@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tagihan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tagihan;
+use App\Models\MasterKolektor;
 use App\Models\MasterPelanggan;
 use App\Models\User;
 use App\Support\AdminDesaScope;
@@ -20,12 +21,14 @@ class TagihanController extends Controller
         $now   = Carbon::now();
         $bulan = $request->bulan ?? $now->month;
         $tahun = $request->tahun ?? $now->year;
+        $isKolektorOnly = auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin');
+        $isAdminDesaOnly = AdminDesaScope::isAdminDesaOnly();
 
         $query = Tagihan::with(['pelanggan.bulanan', 'pelanggan', 'kolektor']);
 
-        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
+        if ($isKolektorOnly) {
             $query->where('kolektor_id', auth()->user()->kolektor_id);
-        } elseif (AdminDesaScope::isAdminDesaOnly()) {
+        } elseif ($isAdminDesaOnly) {
             AdminDesaScope::applyTagihanScope($query);
         }
 
@@ -35,8 +38,11 @@ class TagihanController extends Controller
         $query->when($bulan,              fn($q, $v) => $q->where('bulan',  $v))
               ->when($tahun,              fn($q, $v) => $q->where('tahun',  $v))
               ->when($request->status,   fn($q, $v) => $q->where('status', $v))
-              ->when($request->search,   fn($q, $v) => $q->whereHas('pelanggan', fn($p) => $p->where('nama_pelanggan', 'like', "%$v%")))
-              ->when($request->kolektor_id && auth()->user()->hasRole('superadmin'), fn($q, $v) => $q->where('kolektor_id', $v));
+              ->when($request->search,   fn($q, $v) => $q->whereHas('pelanggan', fn($p) => $p->where('nama_pelanggan', 'like', "%$v%")));
+
+        if (!$isKolektorOnly) {
+            $query->when($request->kolektor_id, fn($q, $v) => $q->where('kolektor_id', $v));
+        }
 
         WilayahFilter::applyViaPelanggan($query, $request);
 
@@ -68,7 +74,16 @@ class TagihanController extends Controller
         $kecamatanList = $wilayahOptions['kecamatanList'];
         $desaOptions = $wilayahOptions['desaOptions'];
         $dusunOptions = $wilayahOptions['dusunOptions'];
-        $kolektorList = auth()->user()->hasRole('superadmin') ? \App\Models\MasterKolektor::all() : [];
+        if ($isKolektorOnly) {
+            $kolektorList = collect();
+        } elseif ($isAdminDesaOnly) {
+            $kolektorQuery = MasterKolektor::query();
+            AdminDesaScope::applyWilayahMasterScope($kolektorQuery);
+            $kolektorList = $kolektorQuery->orderBy('nama_kolektor')->get();
+        } else {
+            $kolektorList = MasterKolektor::orderBy('nama_kolektor')->get();
+        }
+
         $activeFilterCount = WilayahFilter::countActiveFilters($request, [
             'search', 'status', 'kecamatan', 'desa', 'dusun_id', 'kolektor_id',
         ]);
