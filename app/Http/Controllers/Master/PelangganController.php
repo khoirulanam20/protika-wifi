@@ -68,7 +68,7 @@ class PelangganController extends Controller
             $scopeQuery->where('kolektor_id', $request->kolektor_id);
         }
 
-        $wilayahOptions = WilayahFilter::buildOptionsFromScopedQuery($scopeQuery, true);
+        $wilayahOptions = WilayahFilter::buildOptionsFromScopedQuery($scopeQuery, true, $request);
         $kecamatanList = $wilayahOptions['kecamatanList'];
         $desaOptions = $wilayahOptions['desaOptions'];
         $dusunOptions = $wilayahOptions['dusunOptions'];

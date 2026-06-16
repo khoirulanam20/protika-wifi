@@ -66,11 +66,13 @@ class TagihanController extends Controller
         } elseif (AdminDesaScope::isAdminDesaOnly()) {
             AdminDesaScope::applyTagihanScope($tunggakanQuery);
             AdminDesaScope::applyPelangganScope($scopeQuery);
+        } elseif ($request->kolektor_id) {
+            $scopeQuery->where('kolektor_id', $request->kolektor_id);
         }
 
         $totalTunggakan = $tunggakanQuery->count();
 
-        $wilayahOptions = WilayahFilter::buildOptionsFromScopedQuery($scopeQuery, true);
+        $wilayahOptions = WilayahFilter::buildOptionsFromScopedQuery($scopeQuery, true, $request);
         $kecamatanList = $wilayahOptions['kecamatanList'];
         $desaOptions = $wilayahOptions['desaOptions'];
         $dusunOptions = $wilayahOptions['dusunOptions'];

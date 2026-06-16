@@ -86,6 +86,61 @@ class WilayahFilter
     /**
      * @return \Illuminate\Support\Collection<int, array{id: int, dusun: string, desa: string, kecamatan: string}>
      */
+    public static function buildFilteredDusunOptions(
+        array $kecamatanList,
+        ?Request $request = null
+    ): \Illuminate\Support\Collection {
+        $filterKecamatan = $request && $request->filled('kecamatan')
+            ? $request->kecamatan
+            : null;
+
+        $filterDesa = $request && $request->filled('desa')
+            ? $request->desa
+            : null;
+
+        $query = MasterDusun::query()
+            ->select('id', 'dusun', 'desa', 'kecamatan');
+
+        if (AdminDesaScope::isAdminDesaOnly()) {
+            AdminDesaScope::applyDusunScope($query);
+
+            if ($filterKecamatan) {
+                $query->where('kecamatan', $filterKecamatan);
+            }
+
+            if ($filterDesa) {
+                $query->where('desa', $filterDesa);
+            }
+        } elseif ($filterKecamatan) {
+            $query->where('kecamatan', $filterKecamatan);
+
+            if ($filterDesa) {
+                $query->where('desa', $filterDesa);
+            }
+        } elseif (!empty($kecamatanList)) {
+            $query->whereIn('kecamatan', $kecamatanList)
+                ->limit(100);
+        } else {
+            $query->whereRaw('1 = 0');
+        }
+
+        return $query
+            ->orderBy('kecamatan')
+            ->orderBy('desa')
+            ->orderBy('dusun')
+            ->get()
+            ->map(fn ($row) => [
+                'id' => $row->id,
+                'dusun' => $row->dusun,
+                'desa' => $row->desa,
+                'kecamatan' => $row->kecamatan,
+            ])
+            ->values();
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, array{id: int, dusun: string, desa: string, kecamatan: string}>
+     */
     public static function buildDusunOptions(?array $kecamatanList = null, bool $fromMasterDusun = true): \Illuminate\Support\Collection
     {
         $dusunOptionsQuery = MasterDusun::query()
@@ -118,11 +173,14 @@ class WilayahFilter
      *
      * @return array{kecamatanList: array<int, string>, desaOptions: \Illuminate\Support\Collection, dusunOptions: \Illuminate\Support\Collection}
      */
-    public static function buildOptionsFromScopedQuery(Builder $scopedQuery, bool $includeDusun = false): array
-    {
+    public static function buildOptionsFromScopedQuery(
+        Builder $scopedQuery,
+        bool $includeDusun = false,
+        ?Request $request = null
+    ): array {
         $options = self::buildKecamatanDesaOptions($scopedQuery);
         $dusunOptions = $includeDusun
-            ? self::buildDusunOptions($options['kecamatanList'])
+            ? self::buildFilteredDusunOptions($options['kecamatanList'], $request)
             : collect();
 
         return array_merge($options, ['dusunOptions' => $dusunOptions]);

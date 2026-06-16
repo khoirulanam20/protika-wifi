@@ -18,7 +18,7 @@ class DusunController extends Controller
             AdminDesaScope::applyDusunScope($baseQuery);
         }
 
-        $wilayahOptions = WilayahFilter::buildOptionsFromScopedQuery(clone $baseQuery, true);
+        $wilayahOptions = WilayahFilter::buildOptionsFromScopedQuery(clone $baseQuery, true, $request);
 
         $query = clone $baseQuery;
         WilayahFilter::applyDirectWilayah($query, $request);

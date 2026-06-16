@@ -85,9 +85,11 @@ class RekapController extends Controller
             $scopeQuery->where('kolektor_id', auth()->user()->kolektor_id);
         } elseif ($isAdminDesaOnly) {
             AdminDesaScope::applyPelangganScope($scopeQuery);
+        } elseif ($request->kolektor_id) {
+            $scopeQuery->where('kolektor_id', $request->kolektor_id);
         }
 
-        $wilayahOptions = WilayahFilter::buildOptionsFromScopedQuery($scopeQuery, true);
+        $wilayahOptions = WilayahFilter::buildOptionsFromScopedQuery($scopeQuery, true, $request);
         $kecamatanList = $wilayahOptions['kecamatanList'];
         $desaOptions = $wilayahOptions['desaOptions'];
         $dusunOptions = $wilayahOptions['dusunOptions'];
@@ -127,7 +129,9 @@ class RekapController extends Controller
             AdminDesaScope::applyTagihanScope($query);
         }
 
-        $query->when($request->kolektor_id && !$isKolektorOnly, fn ($q, $v) => $q->where('kolektor_id', $v));
+        if (!$isKolektorOnly) {
+            $query->when($request->kolektor_id, fn ($q, $v) => $q->where('kolektor_id', $v));
+        }
 
         WilayahFilter::applyViaPelanggan($query, $request);
 
