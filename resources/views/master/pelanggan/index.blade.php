@@ -8,6 +8,37 @@
 
     <div x-data="pelangganData()">
 
+        <x-list-filter-bar
+            :reset-url="route('master.pelanggan.index')"
+            :active-count="$activeFilterCount"
+            :show-search="true"
+            search-placeholder="Cari nama pelanggan..."
+            :show-reset="request()->hasAny(['search', 'kecamatan', 'desa', 'dusun_id', 'kolektor_id', 'status_alat', 'sort_nama'])"
+            :kecamatan-list="$kecamatanList"
+            :desa-options="$desaOptions"
+            :dusun-options="$dusunOptions"
+            :show-wilayah-dusun="true">
+            @role('superadmin')
+            <div class="w-full md:w-auto space-y-1">
+                <label class="block text-xs font-medium text-content-secondary md:hidden">Kolektor</label>
+                <select name="kolektor_id" class="input-field w-full md:min-w-[9rem] md:max-w-[11rem] text-sm">
+                    <option value="">Semua Kolektor</option>
+                    @foreach($kolektor as $kol)
+                        <option value="{{ $kol->id }}" {{ request('kolektor_id') == $kol->id ? 'selected' : '' }}>{{ $kol->nama_kolektor }}</option>
+                    @endforeach
+                </select>
+            </div>
+            @endrole
+            <div class="w-full md:w-auto space-y-1">
+                <label class="block text-xs font-medium text-content-secondary md:hidden">Status Alat</label>
+                <select name="status_alat" class="input-field w-full md:min-w-[9rem] md:max-w-[11rem] text-sm">
+                    <option value="">Semua Alat</option>
+                    <option value="beli" {{ request('status_alat') == 'beli' ? 'selected' : '' }}>Beli</option>
+                    <option value="pinjam" {{ request('status_alat') == 'pinjam' ? 'selected' : '' }}>Pinjam</option>
+                </select>
+            </div>
+        </x-list-filter-bar>
+
         <div class="card overflow-hidden">
             {{-- Header --}}
             <div class="px-6 py-5 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -23,67 +54,6 @@
                     Tambah Pelanggan
                 </button>
             </div>
-
-            {{-- Filter Bar --}}
-            <form method="GET" class="px-4 sm:px-6 py-4 border-b border-border bg-base-page">
-                <div class="grid grid-cols-1 gap-3">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama pelanggan..."
-                        class="input-field w-full" />
-
-                    <div class="grid grid-cols-2 gap-3 md:flex md:flex-wrap md:items-end md:gap-3">
-                        @unlessrole('admin_desa')
-                        <select name="kecamatan" x-model="filterData.kecamatan"
-                            class="input-field w-full min-w-0 md:flex-1 md:min-w-[9rem] md:max-w-[11rem]">
-                            <option value="">Semua Kecamatan</option>
-                            @foreach($kecamatanList as $kec)
-                                <option value="{{ $kec }}" {{ request('kecamatan') == $kec ? 'selected' : '' }}>{{ $kec }}</option>
-                            @endforeach
-                        </select>
-                        <select name="desa" x-model="filterData.desa"
-                            class="input-field w-full min-w-0 md:flex-1 md:min-w-[9rem] md:max-w-[11rem]">
-                            <option value="">Semua Desa</option>
-                            <template x-for="ds in filteredFilterDesaList" :key="ds">
-                                <option :value="ds" x-text="ds"></option>
-                            </template>
-                        </select>
-                        @endunlessrole
-                        <select name="dusun_id" x-model="filterData.dusun_id"
-                            class="input-field w-full min-w-0 md:flex-1 md:min-w-[9rem] md:max-w-[11rem]">
-                            <option value="">Semua Dusun</option>
-                            <template x-for="d in filteredFilterDusunList" :key="d.id">
-                                <option :value="String(d.id)" x-text="d.dusun"></option>
-                            </template>
-                        </select>
-                        @role('superadmin')
-                        <select name="kolektor_id"
-                            class="input-field w-full min-w-0 md:flex-1 md:min-w-[9rem] md:max-w-[11rem]">
-                            <option value="">Semua Kolektor</option>
-                            @foreach($kolektor as $kol)
-                                <option value="{{ $kol->id }}" {{ request('kolektor_id') == $kol->id ? 'selected' : '' }}>{{ $kol->nama_kolektor }}</option>
-                            @endforeach
-                        </select>
-                        @endrole
-                        <select name="status_alat"
-                            class="input-field w-full min-w-0 md:flex-1 md:min-w-[9rem] md:max-w-[11rem]">
-                            <option value="">Semua Alat</option>
-                            <option value="beli" {{ request('status_alat') == 'beli' ? 'selected' : '' }}>Beli</option>
-                            <option value="pinjam" {{ request('status_alat') == 'pinjam' ? 'selected' : '' }}>Pinjam</option>
-                        </select>
-                        <div class="col-span-2 flex gap-3 md:col-span-1 md:flex-shrink-0 md:ml-auto">
-                            <button type="submit"
-                                class="btn-primary flex-1 md:flex-none md:px-6 inline-flex items-center justify-center whitespace-nowrap">
-                                Filter
-                            </button>
-                            @if(request()->hasAny(['search', 'kecamatan', 'desa', 'dusun_id', 'kolektor_id', 'status_alat', 'sort_nama']))
-                                <a href="{{ route('master.pelanggan.index') }}"
-                                    class="btn-secondary flex-1 md:flex-none md:px-6 inline-flex items-center justify-center whitespace-nowrap">
-                                    Reset
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </form>
 
             {{-- Table --}}
             <div class="overflow-x-auto">
@@ -443,13 +413,6 @@
                     mode: 'create',
                     formAction: '{{ route('master.pelanggan.store') }}',
                     formMethod: 'POST',
-                    filterData: {
-                        kecamatan: @js(request('kecamatan', '')),
-                        desa: @js(request('desa', '')),
-                        dusun_id: @js((string) request('dusun_id', ''))
-                    },
-                    filterDesaOptions: @json($desaOptions),
-                    filterDusunOptions: @json($dusunOptions),
                     formData: {
                         nama_pelanggan: '{{ old('nama_pelanggan') }}',
                         kecamatan: '{{ old('kecamatan') }}',
@@ -474,52 +437,13 @@
                         );
                     },
 
-                    get filteredFilterDesaList() {
-                        const list = this.filterDesaOptions
-                            .filter((item) => !this.filterData.kecamatan || item.kecamatan === this.filterData.kecamatan)
-                            .map((item) => item.desa);
-
-                        return [...new Set(list)];
-                    },
-
-                    get filteredFilterDusunList() {
-                        return this.filterDusunOptions.filter((item) => {
-                            if (this.filterData.kecamatan && item.kecamatan !== this.filterData.kecamatan) {
-                                return false;
-                            }
-                            if (this.filterData.desa && item.desa !== this.filterData.desa) {
-                                return false;
-                            }
-
-                            return true;
-                        });
-                    },
-
                     init() {
-                        // Reset dusun_id saat desa berubah (berdasarkan kode)
                         this.$watch('formData.desa_kode', (newVal, oldVal) => {
                             if (oldVal && newVal && oldVal === newVal) {
                                 return;
                             }
                             if (this.showModal && oldVal) {
                                 this.formData.dusun_id = '';
-                            }
-                        });
-
-                        this.$watch('filterData.kecamatan', () => {
-                            if (this.filterData.desa && !this.filteredFilterDesaList.includes(this.filterData.desa)) {
-                                this.filterData.desa = '';
-                            }
-                            const hasDusun = this.filteredFilterDusunList.some((item) => String(item.id) === String(this.filterData.dusun_id));
-                            if (!hasDusun) {
-                                this.filterData.dusun_id = '';
-                            }
-                        });
-
-                        this.$watch('filterData.desa', () => {
-                            const hasDusun = this.filteredFilterDusunList.some((item) => String(item.id) === String(this.filterData.dusun_id));
-                            if (!hasDusun) {
-                                this.filterData.dusun_id = '';
                             }
                         });
                     },

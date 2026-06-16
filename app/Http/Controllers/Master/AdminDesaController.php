@@ -5,24 +5,34 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Models\MasterAdminDesa;
 use App\Models\User;
+use App\Support\WilayahFilter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class AdminDesaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $adminDesa = MasterAdminDesa::with('user')
+        $baseQuery = MasterAdminDesa::query();
+        $wilayahOptions = WilayahFilter::buildOptionsFromScopedQuery(clone $baseQuery, false);
+
+        $query = clone $baseQuery;
+        WilayahFilter::applyDirectWilayah($query, $request);
+
+        $adminDesa = $query->with('user')
             ->latest()
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
         $adminDesa->getCollection()->transform(function ($item) {
             $item->pelanggan_count = $item->pelangganQuery()->count();
             return $item;
         });
 
-        return view('master.admin-desa.index', compact('adminDesa'));
+        $activeFilterCount = WilayahFilter::countActiveFilters($request, ['kecamatan', 'desa']);
+
+        return view('master.admin-desa.index', array_merge(compact('adminDesa', 'activeFilterCount'), $wilayahOptions));
     }
 
     public function store(Request $request)

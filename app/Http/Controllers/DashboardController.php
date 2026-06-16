@@ -7,6 +7,7 @@ use App\Models\MasterKolektor;
 use App\Models\MasterPelanggan;
 use App\Models\Tagihan;
 use App\Support\AdminDesaScope;
+use App\Support\WilayahFilter;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -63,6 +64,15 @@ class DashboardController extends Controller
         $periodeLabel = Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F Y');
         $trenEndLabel = Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('M Y');
 
+        $activeFilterKeys = ['kolektor_id', 'admin_desa_id'];
+        if ($request->has('bulan') && (int) $request->bulan !== now()->month) {
+            $activeFilterKeys[] = 'bulan';
+        }
+        if ($request->has('tahun') && (int) $request->tahun !== now()->year) {
+            $activeFilterKeys[] = 'tahun';
+        }
+        $activeFilterCount = WilayahFilter::countActiveFilters($request, $activeFilterKeys);
+
         return view('dashboard', compact(
             'stats',
             'tren',
@@ -79,6 +89,7 @@ class DashboardController extends Controller
             'periodeLabel',
             'trenEndLabel',
             'tooltipScopeLabel',
+            'activeFilterCount',
         ));
     }
 

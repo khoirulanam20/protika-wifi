@@ -41,6 +41,56 @@
             </div>
         @endif
 
+        <x-list-filter-bar
+            :reset-url="route('tagihan.index')"
+            :active-count="$activeFilterCount"
+            :show-search="true"
+            search-placeholder="Cari nama pelanggan..."
+            :show-reset="request()->hasAny(['search', 'status', 'bulan', 'tahun', 'kecamatan', 'desa', 'dusun_id', 'kolektor_id'])"
+            :kecamatan-list="$kecamatanList"
+            :desa-options="$desaOptions"
+            :dusun-options="$dusunOptions"
+            :show-wilayah-dusun="true">
+            @role('superadmin')
+            <div class="w-full md:w-auto space-y-1">
+                <label class="block text-xs font-medium text-content-secondary md:hidden">Kolektor</label>
+                <select name="kolektor_id" class="input-field w-full md:w-36 text-sm">
+                    <option value="">Semua Kol.</option>
+                    @foreach($kolektorList as $kol)
+                        <option value="{{ $kol->id }}" {{ request('kolektor_id') == $kol->id ? 'selected' : '' }}>{{ $kol->nama_kolektor }}</option>
+                    @endforeach
+                </select>
+            </div>
+            @endrole
+            <div class="w-full md:w-auto space-y-1">
+                <label class="block text-xs font-medium text-content-secondary md:hidden">Bulan</label>
+                <select name="bulan" class="input-field w-full md:w-32 text-sm">
+                    @foreach(range(1, 12) as $m)
+                        <option value="{{ $m }}" {{ $bulan == $m ? 'selected' : '' }}>
+                            {{ date('M', mktime(0, 0, 0, $m, 1)) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="w-full md:w-auto space-y-1">
+                <label class="block text-xs font-medium text-content-secondary md:hidden">Tahun</label>
+                <select name="tahun" class="input-field w-full md:w-24 text-sm">
+                    @foreach(range(now()->year - 2, now()->year + 1) as $y)
+                        <option value="{{ $y }}" {{ $tahun == $y ? 'selected' : '' }}>{{ $y }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="w-full md:w-auto space-y-1">
+                <label class="block text-xs font-medium text-content-secondary md:hidden">Status</label>
+                <select name="status" class="input-field w-full md:w-36 text-sm">
+                    <option value="">Semua Status</option>
+                    <option value="lunas" {{ request('status') == 'lunas' ? 'selected' : '' }}>Lunas</option>
+                    <option value="belum_lunas" {{ request('status') == 'belum_lunas' ? 'selected' : '' }}>Belum Lunas</option>
+                    <option value="sebagian" {{ request('status') == 'sebagian' ? 'selected' : '' }}>Sebagian</option>
+                </select>
+            </div>
+        </x-list-filter-bar>
+
         <div class="card overflow-hidden">
             {{-- Header --}}
             <div class="px-4 md:px-6 py-4 md:py-5 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
@@ -53,51 +103,6 @@
                     </p>
                 </div>
             </div>
-
-            {{-- Filter Bar --}}
-            <form method="GET" class="px-4 md:px-6 py-3 md:py-4 border-b border-border flex flex-wrap gap-2 md:gap-3 bg-base-page">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama pelanggan..."
-                    class="input-field flex-1 min-w-40 text-sm">
-                @unlessrole('admin_desa')
-                <select name="kecamatan" class="input-field w-32 md:w-40 text-sm">
-                    <option value="">Semua Kec.</option>
-                    @foreach($kecamatanList as $kec)
-                        <option value="{{ $kec }}" {{ request('kecamatan') == $kec ? 'selected' : '' }}>{{ $kec }}</option>
-                    @endforeach
-                </select>
-                @endunlessrole
-                @role('superadmin')
-                <select name="kolektor_id" class="input-field w-28 md:w-36 text-sm">
-                    <option value="">Semua Kol.</option>
-                    @foreach($kolektorList as $kol)
-                        <option value="{{ $kol->id }}" {{ request('kolektor_id') == $kol->id ? 'selected' : '' }}>{{ $kol->nama_kolektor }}</option>
-                    @endforeach
-                </select>
-                @endrole
-                <select name="bulan" class="input-field w-24 md:w-32 text-sm">
-                    @foreach(range(1, 12) as $m)
-                        <option value="{{ $m }}" {{ $bulan == $m ? 'selected' : '' }}>
-                            {{ date('M', mktime(0, 0, 0, $m, 1)) }}
-                        </option>
-                    @endforeach
-                </select>
-                <select name="tahun" class="input-field w-20 md:w-24 text-sm">
-                    @foreach(range(now()->year - 2, now()->year + 1) as $y)
-                        <option value="{{ $y }}" {{ $tahun == $y ? 'selected' : '' }}>{{ $y }}</option>
-                    @endforeach
-                </select>
-                <select name="status" class="input-field w-28 md:w-36 text-sm">
-                    <option value="">Semua Status</option>
-                    <option value="lunas" {{ request('status') == 'lunas' ? 'selected' : '' }}>Lunas</option>
-                    <option value="belum_lunas" {{ request('status') == 'belum_lunas' ? 'selected' : '' }}>Belum Lunas
-                    </option>
-                    <option value="sebagian" {{ request('status') == 'sebagian' ? 'selected' : '' }}>Sebagian</option>
-                </select>
-                <button type="submit" class="btn-primary px-4 md:px-5 text-sm">Filter</button>
-                @if(request()->hasAny(['search', 'status', 'bulan', 'tahun', 'kecamatan', 'kolektor_id']))
-                    <a href="{{ route('tagihan.index') }}" class="btn-secondary px-4 md:px-5 text-sm">Reset</a>
-                @endif
-            </form>
 
             {{-- Bulk Action Bar --}}
             <div x-show="selected.length > 0" x-cloak x-transition class="bg-status-success/10 border-b border-status-success/20 px-4 md:px-6 py-2.5 md:py-3 flex items-center justify-between">

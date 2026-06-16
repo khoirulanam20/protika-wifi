@@ -30,6 +30,49 @@
     </div>
 </div>
 
+</div>
+
+<x-list-filter-bar
+    :reset-url="route('tagihan.rekap')"
+    :active-count="$activeFilterCount"
+    :show-reset="request()->hasAny(['bulan', 'tahun', 'kecamatan', 'desa', 'dusun_id', 'kolektor_id'])"
+    :kecamatan-list="$kecamatanList"
+    :desa-options="$desaOptions"
+    :dusun-options="$dusunOptions"
+    :show-wilayah-dusun="true">
+    <div class="w-full md:w-auto space-y-1">
+        <label class="block text-xs font-medium text-content-secondary md:hidden">Bulan</label>
+        <select name="bulan" class="input-field w-full md:w-40">
+            <option value="">Semua Bulan</option>
+            @foreach(range(1, 12) as $m)
+                <option value="{{ $m }}" {{ (string) $bulan === (string) $m ? 'selected' : '' }}>
+                    {{ \Carbon\Carbon::createFromDate(now()->year, $m, 1)->translatedFormat('F') }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+    <div class="w-full md:w-auto space-y-1">
+        <label class="block text-xs font-medium text-content-secondary md:hidden">Tahun</label>
+        <select name="tahun" class="input-field w-full md:w-32">
+            <option value="">Semua Tahun</option>
+            @foreach(range(now()->year, now()->year - 5) as $y)
+                <option value="{{ $y }}" {{ (string) $tahun === (string) $y ? 'selected' : '' }}>{{ $y }}</option>
+            @endforeach
+        </select>
+    </div>
+    @role('superadmin')
+    <div class="w-full md:w-auto space-y-1">
+        <label class="block text-xs font-medium text-content-secondary md:hidden">Kolektor</label>
+        <select name="kolektor_id" class="input-field w-full md:w-48">
+            <option value="">Semua Kolektor</option>
+            @foreach($kolektor as $k)
+                <option value="{{ $k->id }}" {{ request('kolektor_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kolektor }}</option>
+            @endforeach
+        </select>
+    </div>
+    @endrole
+</x-list-filter-bar>
+
 <div class="card overflow-hidden">
     <div class="px-6 py-5 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 class="text-content-primary font-semibold text-lg">Laporan Rincian</h2>
@@ -42,36 +85,6 @@
         </a>
         @endrole
     </div>
-
-    {{-- Filter --}}
-    <form method="GET" class="px-6 py-4 border-b border-border flex flex-wrap gap-3">
-        <select name="bulan" class="input-field w-40">
-            <option value="">Semua Bulan</option>
-            @foreach(range(1, 12) as $m)
-                <option value="{{ $m }}" {{ (string) $bulan === (string) $m ? 'selected' : '' }}>
-                    {{ \Carbon\Carbon::createFromDate(now()->year, $m, 1)->translatedFormat('F') }}
-                </option>
-            @endforeach
-        </select>
-        <select name="tahun" class="input-field w-32">
-            <option value="">Semua Tahun</option>
-            @foreach(range(now()->year, now()->year - 5) as $y)
-                <option value="{{ $y }}" {{ (string) $tahun === (string) $y ? 'selected' : '' }}>{{ $y }}</option>
-            @endforeach
-        </select>
-        @role('superadmin')
-        <select name="kolektor_id" class="input-field w-48">
-            <option value="">Semua Kolektor</option>
-            @foreach($kolektor as $k)
-                <option value="{{ $k->id }}" {{ request('kolektor_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kolektor }}</option>
-            @endforeach
-        </select>
-        @endrole
-        <button type="submit" class="btn-primary">Filter</button>
-        @if(request()->hasAny(['bulan', 'tahun', 'kolektor_id']))
-            <a href="{{ route('tagihan.rekap') }}" class="btn-secondary">Reset</a>
-        @endif
-    </form>
 
     <div class="overflow-x-auto">
         <table class="w-full text-sm">

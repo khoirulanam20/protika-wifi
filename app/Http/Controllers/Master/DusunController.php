@@ -5,21 +5,28 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Models\MasterDusun;
 use App\Support\AdminDesaScope;
+use App\Support\WilayahFilter;
 use Illuminate\Http\Request;
 
 class DusunController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $query = MasterDusun::query();
+        $baseQuery = MasterDusun::query();
 
         if (AdminDesaScope::isAdminDesaOnly()) {
-            AdminDesaScope::applyDusunScope($query);
+            AdminDesaScope::applyDusunScope($baseQuery);
         }
 
-        $dusun = $query->latest()->paginate(20);
+        $wilayahOptions = WilayahFilter::buildOptionsFromScopedQuery(clone $baseQuery, true);
 
-        return view('master.dusun.index', compact('dusun'));
+        $query = clone $baseQuery;
+        WilayahFilter::applyDirectWilayah($query, $request);
+
+        $dusun = $query->latest()->paginate(20)->withQueryString();
+        $activeFilterCount = WilayahFilter::countActiveFilters($request, ['kecamatan', 'desa', 'dusun_id']);
+
+        return view('master.dusun.index', array_merge(compact('dusun', 'activeFilterCount'), $wilayahOptions));
     }
 
     public function create()

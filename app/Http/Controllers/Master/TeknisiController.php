@@ -5,21 +5,28 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Models\MasterTeknisi;
 use App\Support\AdminDesaScope;
+use App\Support\WilayahFilter;
 use Illuminate\Http\Request;
 
 class TeknisiController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $query = MasterTeknisi::query();
+        $baseQuery = MasterTeknisi::query();
 
         if (AdminDesaScope::isAdminDesaOnly()) {
-            AdminDesaScope::applyWilayahMasterScope($query);
+            AdminDesaScope::applyWilayahMasterScope($baseQuery);
         }
 
-        $teknisi = $query->latest()->paginate(20);
+        $wilayahOptions = WilayahFilter::buildOptionsFromScopedQuery(clone $baseQuery, false);
 
-        return view('master.teknisi.index', compact('teknisi'));
+        $query = clone $baseQuery;
+        WilayahFilter::applyDirectWilayah($query, $request);
+
+        $teknisi = $query->latest()->paginate(20)->withQueryString();
+        $activeFilterCount = WilayahFilter::countActiveFilters($request, ['kecamatan', 'desa']);
+
+        return view('master.teknisi.index', array_merge(compact('teknisi', 'activeFilterCount'), $wilayahOptions));
     }
 
     public function create()

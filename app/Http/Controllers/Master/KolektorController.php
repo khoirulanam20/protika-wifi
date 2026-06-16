@@ -6,30 +6,42 @@ use App\Http\Controllers\Controller;
 use App\Models\MasterKolektor;
 use App\Models\User;
 use App\Support\AdminDesaScope;
+use App\Support\WilayahFilter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 
 class KolektorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $bulan = now()->month;
         $tahun = now()->year;
 
-        $query = MasterKolektor::with('user')
-            ->withCount('pelanggan')
-            ->withSum(['tagihan as tagihan_sum_nominal' => function ($query) use ($bulan, $tahun) {
-                $query->where('bulan', $bulan)->where('tahun', $tahun);
-            }], 'nominal');
+        $baseQuery = MasterKolektor::query();
 
         if (AdminDesaScope::isAdminDesaOnly()) {
-            AdminDesaScope::applyWilayahMasterScope($query);
+            AdminDesaScope::applyWilayahMasterScope($baseQuery);
         }
 
-        $kolektor = $query->latest()->paginate(20);
+        $wilayahOptions = WilayahFilter::buildOptionsFromScopedQuery(clone $baseQuery, false);
 
-        return view('master.kolektor.index', compact('kolektor'));
+        $query = clone $baseQuery;
+        WilayahFilter::applyDirectWilayah($query, $request);
+
+        $kolektor = $query
+            ->with('user')
+            ->withCount('pelanggan')
+            ->withSum(['tagihan as tagihan_sum_nominal' => function ($q) use ($bulan, $tahun) {
+                $q->where('bulan', $bulan)->where('tahun', $tahun);
+            }], 'nominal')
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        $activeFilterCount = WilayahFilter::countActiveFilters($request, ['kecamatan', 'desa']);
+
+        return view('master.kolektor.index', array_merge(compact('kolektor', 'activeFilterCount'), $wilayahOptions));
     }
 
     public function create()

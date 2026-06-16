@@ -7,6 +7,7 @@ use App\Models\Tagihan;
 use App\Models\MasterPelanggan;
 use App\Models\User;
 use App\Support\AdminDesaScope;
+use App\Support\WilayahFilter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\TagihanTerbayarNotification;
@@ -35,11 +36,9 @@ class TagihanController extends Controller
               ->when($tahun,              fn($q, $v) => $q->where('tahun',  $v))
               ->when($request->status,   fn($q, $v) => $q->where('status', $v))
               ->when($request->search,   fn($q, $v) => $q->whereHas('pelanggan', fn($p) => $p->where('nama_pelanggan', 'like', "%$v%")))
-              ->when(
-                  $request->kecamatan && !AdminDesaScope::isAdminDesaOnly(),
-                  fn($q, $v) => $q->whereHas('pelanggan', fn($p) => $p->where('kecamatan', $v))
-              )
               ->when($request->kolektor_id && auth()->user()->hasRole('superadmin'), fn($q, $v) => $q->where('kolektor_id', $v));
+
+        WilayahFilter::applyViaPelanggan($query, $request);
 
         $tagihan = $query->latest()->paginate(20)->withQueryString();
 
@@ -53,22 +52,38 @@ class TagihanController extends Controller
                   });
             });
 
-        $kecamatanQuery = MasterPelanggan::distinct()->select('kecamatan')->whereNotNull('kecamatan');
+        $scopeQuery = MasterPelanggan::query();
 
         if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
             $tunggakanQuery->where('kolektor_id', auth()->user()->kolektor_id);
-            $kecamatanQuery->where('kolektor_id', auth()->user()->kolektor_id);
+            $scopeQuery->where('kolektor_id', auth()->user()->kolektor_id);
         } elseif (AdminDesaScope::isAdminDesaOnly()) {
             AdminDesaScope::applyTagihanScope($tunggakanQuery);
-            AdminDesaScope::applyPelangganScope($kecamatanQuery);
+            AdminDesaScope::applyPelangganScope($scopeQuery);
         }
 
         $totalTunggakan = $tunggakanQuery->count();
-        
-        $kecamatanList = $kecamatanQuery->pluck('kecamatan')->filter()->toArray();
-        $kolektorList = auth()->user()->hasRole('superadmin') ? \App\Models\MasterKolektor::all() : [];
 
-        return view('tagihan.index', compact('tagihan', 'bulan', 'tahun', 'totalTunggakan', 'kecamatanList', 'kolektorList'));
+        $wilayahOptions = WilayahFilter::buildOptionsFromScopedQuery($scopeQuery, true);
+        $kecamatanList = $wilayahOptions['kecamatanList'];
+        $desaOptions = $wilayahOptions['desaOptions'];
+        $dusunOptions = $wilayahOptions['dusunOptions'];
+        $kolektorList = auth()->user()->hasRole('superadmin') ? \App\Models\MasterKolektor::all() : [];
+        $activeFilterCount = WilayahFilter::countActiveFilters($request, [
+            'search', 'status', 'kecamatan', 'desa', 'dusun_id', 'kolektor_id',
+        ]);
+
+        return view('tagihan.index', compact(
+            'tagihan',
+            'bulan',
+            'tahun',
+            'totalTunggakan',
+            'kecamatanList',
+            'desaOptions',
+            'dusunOptions',
+            'kolektorList',
+            'activeFilterCount'
+        ));
     }
 
     public function create()

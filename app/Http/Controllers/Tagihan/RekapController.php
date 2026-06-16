@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Tagihan;
 use App\Http\Controllers\Controller;
 use App\Models\Tagihan;
 use App\Models\MasterKolektor;
+use App\Models\MasterPelanggan;
 use App\Support\AdminDesaScope;
+use App\Support\WilayahFilter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -34,6 +36,8 @@ class RekapController extends Controller
               ->when($tahun, fn ($q) => $q->where('tahun', $tahun))
               ->when($request->kolektor_id, fn ($q, $v) => $q->where('kolektor_id', $v));
 
+        WilayahFilter::applyViaPelanggan($query, $request);
+
         $statsQuery = clone $query;
 
         $totalOmzet = (clone $statsQuery)->sum('terbayar');
@@ -46,6 +50,22 @@ class RekapController extends Controller
             ? MasterKolektor::all()
             : MasterKolektor::where('id', auth()->user()->kolektor_id)->get();
 
+        $scopeQuery = MasterPelanggan::query();
+
+        if (auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin')) {
+            $scopeQuery->where('kolektor_id', auth()->user()->kolektor_id);
+        } elseif (AdminDesaScope::isAdminDesaOnly()) {
+            AdminDesaScope::applyPelangganScope($scopeQuery);
+        }
+
+        $wilayahOptions = WilayahFilter::buildOptionsFromScopedQuery($scopeQuery, true);
+        $kecamatanList = $wilayahOptions['kecamatanList'];
+        $desaOptions = $wilayahOptions['desaOptions'];
+        $dusunOptions = $wilayahOptions['dusunOptions'];
+        $activeFilterCount = WilayahFilter::countActiveFilters($request, [
+            'kecamatan', 'desa', 'dusun_id', 'kolektor_id',
+        ]);
+
         return view('tagihan.rekap', compact(
             'rekap',
             'kolektor',
@@ -53,7 +73,11 @@ class RekapController extends Controller
             'tahun',
             'totalOmzet',
             'totalPiutang',
-            'totalLunas'
+            'totalLunas',
+            'kecamatanList',
+            'desaOptions',
+            'dusunOptions',
+            'activeFilterCount'
         ));
     }
 

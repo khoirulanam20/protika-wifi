@@ -7,10 +7,17 @@
 @section('content')
 
     {{-- Filter --}}
-    <form method="GET" action="{{ route('dashboard') }}" class="card p-4 mb-6 flex flex-wrap gap-3 items-end">
-        <div>
-            <label class="block text-content-secondary text-xs font-medium mb-1.5">Bulan</label>
-            <select name="bulan" class="input-field w-40">
+    <x-list-filter-bar
+        :reset-url="route('dashboard')"
+        :active-count="$activeFilterCount"
+        :show-reset="request()->hasAny(['bulan', 'tahun', 'kolektor_id', 'admin_desa_id'])"
+        :enable-wilayah-alpine="false"
+        :show-wilayah-kecamatan="false"
+        :show-wilayah-desa="false"
+        :show-wilayah-dusun="false">
+        <div class="w-full md:w-auto space-y-1">
+            <label class="block text-xs font-medium text-content-secondary md:hidden">Bulan</label>
+            <select name="bulan" class="input-field w-full md:w-40">
                 @foreach(range(1, 12) as $m)
                     <option value="{{ $m }}" {{ (int) $bulan === $m ? 'selected' : '' }}>
                         {{ \Carbon\Carbon::createFromDate($tahun, $m, 1)->translatedFormat('F') }}
@@ -18,18 +25,18 @@
                 @endforeach
             </select>
         </div>
-        <div>
-            <label class="block text-content-secondary text-xs font-medium mb-1.5">Tahun</label>
-            <select name="tahun" class="input-field w-32">
+        <div class="w-full md:w-auto space-y-1">
+            <label class="block text-xs font-medium text-content-secondary md:hidden">Tahun</label>
+            <select name="tahun" class="input-field w-full md:w-32">
                 @foreach(range(now()->year, now()->year - 5) as $y)
                     <option value="{{ $y }}" {{ (int) $tahun === $y ? 'selected' : '' }}>{{ $y }}</option>
                 @endforeach
             </select>
         </div>
         @if($isSuperadmin)
-        <div>
-            <label class="block text-content-secondary text-xs font-medium mb-1.5">Admin Desa</label>
-            <select name="admin_desa_id" class="input-field w-56">
+        <div class="w-full md:w-auto space-y-1">
+            <label class="block text-xs font-medium text-content-secondary md:hidden">Admin Desa</label>
+            <select name="admin_desa_id" class="input-field w-full md:w-56">
                 <option value="">Semua Admin Desa</option>
                 @foreach($adminDesaList as $ad)
                     <option value="{{ $ad->id }}" {{ (int) ($adminDesaId ?? 0) === $ad->id ? 'selected' : '' }}>
@@ -38,9 +45,9 @@
                 @endforeach
             </select>
         </div>
-        <div>
-            <label class="block text-content-secondary text-xs font-medium mb-1.5">Kolektor</label>
-            <select name="kolektor_id" class="input-field w-48">
+        <div class="w-full md:w-auto space-y-1">
+            <label class="block text-xs font-medium text-content-secondary md:hidden">Kolektor</label>
+            <select name="kolektor_id" class="input-field w-full md:w-48">
                 <option value="">Semua Kolektor</option>
                 @foreach($kolektorList as $k)
                     <option value="{{ $k->id }}" {{ (int) ($kolektorId ?? 0) === $k->id ? 'selected' : '' }}>
@@ -50,11 +57,7 @@
             </select>
         </div>
         @endif
-        <button type="submit" class="btn-primary">Filter</button>
-        @if(request()->hasAny(['bulan', 'tahun', 'kolektor_id', 'admin_desa_id']))
-            <a href="{{ route('dashboard') }}" class="btn-secondary">Reset</a>
-        @endif
-    </form>
+    </x-list-filter-bar>
 
     {{-- Stats Grid --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

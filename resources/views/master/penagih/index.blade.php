@@ -34,6 +34,15 @@
             }
         }">
 
+        <x-list-filter-bar
+            :reset-url="route('master.penagih.index')"
+            :active-count="$activeFilterCount"
+            :show-reset="request()->hasAny(['kecamatan', 'desa'])"
+            :kecamatan-list="$kecamatanList"
+            :desa-options="$desaOptions"
+            :dusun-options="[]"
+            :show-wilayah-dusun="false" />
+
         <div class="card overflow-hidden">
             <div class="px-6 py-5 border-b border-border flex items-center justify-between">
                 <h2 class="text-content-primary font-semibold text-lg">Daftar Penagih</h2>

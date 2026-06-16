@@ -12,6 +12,7 @@ use App\Models\MasterPenagih;
 use App\Models\Tagihan;
 use App\Models\User;
 use App\Support\AdminDesaScope;
+use App\Support\WilayahFilter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -36,17 +37,9 @@ class PelangganController extends Controller
             $q->where('nama_pelanggan', 'like', "%$v%");
         });
 
-        if (!$isAdminDesaOnly) {
-            $query->when($request->kecamatan, function($q, $v) {
-                $q->where('kecamatan', $v);
-            })->when($request->desa, function($q, $v) {
-                $q->where('desa', $v);
-            });
-        }
+        WilayahFilter::applyPelangganWilayah($query, $request);
 
-        $query->when($request->dusun_id, function($q, $v) {
-            $q->where('dusun_id', $v);
-        })->when($request->status_alat, function($q, $v) {
+        $query->when($request->status_alat, function($q, $v) {
             $q->where('status_alat', $v);
         });
 
@@ -75,53 +68,13 @@ class PelangganController extends Controller
             $scopeQuery->where('kolektor_id', $request->kolektor_id);
         }
 
-        $kecamatanList = (clone $scopeQuery)
-            ->select('kecamatan')
-            ->whereNotNull('kecamatan')
-            ->distinct()
-            ->orderBy('kecamatan')
-            ->pluck('kecamatan')
-            ->filter()
-            ->values()
-            ->toArray();
-
-        $desaOptions = (clone $scopeQuery)
-            ->select('kecamatan', 'desa')
-            ->whereNotNull('kecamatan')
-            ->whereNotNull('desa')
-            ->distinct()
-            ->orderBy('kecamatan')
-            ->orderBy('desa')
-            ->get()
-            ->map(fn ($row) => [
-                'kecamatan' => $row->kecamatan,
-                'desa' => $row->desa,
-            ])
-            ->values();
-
-        $dusunOptionsQuery = MasterDusun::query()
-            ->select('id', 'dusun', 'desa', 'kecamatan');
-
-        if ($isAdminDesaOnly) {
-            AdminDesaScope::applyDusunScope($dusunOptionsQuery);
-        } elseif (!empty($kecamatanList)) {
-            $dusunOptionsQuery->whereIn('kecamatan', $kecamatanList);
-        } else {
-            $dusunOptionsQuery->whereRaw('1 = 0');
-        }
-
-        $dusunOptions = $dusunOptionsQuery
-            ->orderBy('kecamatan')
-            ->orderBy('desa')
-            ->orderBy('dusun')
-            ->get()
-            ->map(fn ($row) => [
-                'id' => $row->id,
-                'dusun' => $row->dusun,
-                'desa' => $row->desa,
-                'kecamatan' => $row->kecamatan,
-            ])
-            ->values();
+        $wilayahOptions = WilayahFilter::buildOptionsFromScopedQuery($scopeQuery, true);
+        $kecamatanList = $wilayahOptions['kecamatanList'];
+        $desaOptions = $wilayahOptions['desaOptions'];
+        $dusunOptions = $wilayahOptions['dusunOptions'];
+        $activeFilterCount = WilayahFilter::countActiveFilters($request, [
+            'search', 'kecamatan', 'desa', 'dusun_id', 'kolektor_id', 'status_alat',
+        ]);
 
         $dusun   = MasterDusun::all();
         $bulanan = MasterBulanan::all();
@@ -148,7 +101,8 @@ class PelangganController extends Controller
             'kolektor',
             'teknisi',
             'penagih',
-            'isAdminDesaOnly'
+            'isAdminDesaOnly',
+            'activeFilterCount'
         ));
     }
 
