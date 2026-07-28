@@ -26,6 +26,11 @@ class Tagihan extends Model
         return max(0, $this->nominal - $this->terbayar);
     }
 
+    public function getNomorInvoiceAttribute(): string
+    {
+        return sprintf('INV-%d%02d-%05d', $this->tahun, $this->bulan, $this->id);
+    }
+
     /**
      * Tanggal jatuh tempo = tanggal pemasangan pada bulan tagihan ini.
      * Contoh: pasang tgl 10, tagihan Mei 2026 → jatuh tempo 10 Mei 2026

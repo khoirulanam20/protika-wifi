@@ -16,6 +16,10 @@ use App\Http\Controllers\Api\WilayahController;
 
 Route::get('/', fn() => redirect()->route('login'));
 
+Route::get('/invoice/{tagihan}', [TagihanController::class, 'invoicePublic'])
+    ->middleware('signed')
+    ->name('tagihan.invoice.public');
+
 // API Wilayah Routes
 Route::prefix('api/wilayah')->middleware(['auth'])->group(function () {
     Route::get('/provinces', [WilayahController::class, 'provinces']);
@@ -65,6 +69,7 @@ Route::middleware(['auth'])->group(function () {
              ->middleware('role:superadmin');
         Route::post('/tagihan/{tagihan}/lunas-cepat', [TagihanController::class, 'lunaskanCepat'])->name('tagihan.lunas-cepat');
         Route::post('/tagihan/{tagihan}/batal-lunas', [TagihanController::class, 'batalLunas'])->name('tagihan.batal-lunas');
+        Route::get('/tagihan/{tagihan}/invoice', [TagihanController::class, 'invoice'])->name('tagihan.invoice');
         Route::resource('tagihan',      TagihanController::class);
     });
 

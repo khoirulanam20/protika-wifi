@@ -12,6 +12,7 @@ use App\Support\WilayahFilter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\TagihanTerbayarNotification;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
 class TagihanController extends Controller
@@ -267,6 +268,25 @@ class TagihanController extends Controller
         return redirect()->route('tagihan.index')->with('success', 'Tagihan berhasil dihapus.');
     }
 
+    public function invoice(Tagihan $tagihan)
+    {
+        $this->authorizeTagihanAccess($tagihan);
+        $tagihan = $this->resolveInvoiceTagihan($tagihan);
+
+        $pdf = Pdf::loadView('tagihan.invoice', compact('tagihan'));
+
+        return $pdf->download("{$tagihan->nomor_invoice}.pdf");
+    }
+
+    public function invoicePublic(Tagihan $tagihan)
+    {
+        $tagihan = $this->resolveInvoiceTagihan($tagihan);
+
+        $pdf = Pdf::loadView('tagihan.invoice', compact('tagihan'));
+
+        return $pdf->stream("{$tagihan->nomor_invoice}.pdf");
+    }
+
     // -----------------------------------------------------------------------
     // Auto-generate tagihan untuk semua pelanggan aktif di bulan berjalan
     // -----------------------------------------------------------------------
@@ -307,6 +327,15 @@ class TagihanController extends Controller
     /**
      * Helper to notify superadmin and kolektor when tagihan is paid
      */
+    private function resolveInvoiceTagihan(Tagihan $tagihan): Tagihan
+    {
+        if ($tagihan->status !== 'lunas') {
+            abort(404);
+        }
+
+        return $tagihan->load(['pelanggan.dusun', 'pelanggan.bulanan', 'kolektor']);
+    }
+
     private function authorizeTagihanAccess(Tagihan $tagihan): void
     {
         $tagihan->loadMissing('pelanggan.dusun');
