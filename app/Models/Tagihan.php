@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\URL;
 use Carbon\Carbon;
 
 class Tagihan extends Model
@@ -29,6 +30,23 @@ class Tagihan extends Model
     public function getNomorInvoiceAttribute(): string
     {
         return sprintf('INV-%d%02d-%05d', $this->tahun, $this->bulan, $this->id);
+    }
+
+    public function invoiceShareText(): string
+    {
+        $this->loadMissing('pelanggan');
+
+        $periode = Carbon::createFromDate($this->tahun, $this->bulan, 1)
+            ->locale('id')
+            ->translatedFormat('F Y');
+
+        $url = URL::temporarySignedRoute('tagihan.invoice.public', now()->addDays(7), $this);
+
+        return "Halo {$this->pelanggan->nama_pelanggan},\n\n"
+            . "Terima kasih atas pembayaran WiFi Protika periode {$periode}.\n"
+            . "Nominal: Rp " . number_format($this->nominal, 0, ',', '.') . "\n"
+            . "Tanggal bayar: " . ($this->tanggal_bayar?->format('d/m/Y') ?? '—') . "\n\n"
+            . "Lihat invoice: {$url}";
     }
 
     /**

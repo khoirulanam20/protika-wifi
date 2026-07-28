@@ -268,23 +268,35 @@ class TagihanController extends Controller
         return redirect()->route('tagihan.index')->with('success', 'Tagihan berhasil dihapus.');
     }
 
-    public function invoice(Tagihan $tagihan)
+    public function invoice(Request $request, Tagihan $tagihan)
     {
         $this->authorizeTagihanAccess($tagihan);
         $tagihan = $this->resolveInvoiceTagihan($tagihan);
 
-        $pdf = Pdf::loadView('tagihan.invoice', compact('tagihan'));
+        if ($request->boolean('pdf')) {
+            return Pdf::loadView('tagihan.invoice-pdf', compact('tagihan'))
+                ->download("{$tagihan->nomor_invoice}.pdf");
+        }
 
-        return $pdf->download("{$tagihan->nomor_invoice}.pdf");
+        return view('tagihan.invoice', [
+            'tagihan'  => $tagihan,
+            'isPublic' => false,
+        ]);
     }
 
-    public function invoicePublic(Tagihan $tagihan)
+    public function invoicePublic(Request $request, Tagihan $tagihan)
     {
         $tagihan = $this->resolveInvoiceTagihan($tagihan);
 
-        $pdf = Pdf::loadView('tagihan.invoice', compact('tagihan'));
+        if ($request->boolean('pdf')) {
+            return Pdf::loadView('tagihan.invoice-pdf', compact('tagihan'))
+                ->stream("{$tagihan->nomor_invoice}.pdf");
+        }
 
-        return $pdf->stream("{$tagihan->nomor_invoice}.pdf");
+        return view('tagihan.invoice', [
+            'tagihan'  => $tagihan,
+            'isPublic' => true,
+        ]);
     }
 
     // -----------------------------------------------------------------------
@@ -333,7 +345,13 @@ class TagihanController extends Controller
             abort(404);
         }
 
-        return $tagihan->load(['pelanggan.dusun', 'pelanggan.bulanan', 'kolektor']);
+        $tagihan->load(['pelanggan.dusun', 'pelanggan.bulanan', 'kolektor']);
+
+        if (!$tagihan->pelanggan) {
+            abort(404);
+        }
+
+        return $tagihan;
     }
 
     private function authorizeTagihanAccess(Tagihan $tagihan): void

@@ -2,36 +2,59 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>{{ $tagihan->nomor_invoice }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ $tagihan->nomor_invoice }} — Protika WiFi</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #1a1a1a; line-height: 1.5; }
-        .container { padding: 32px 40px; }
+        body { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; color: #1a1a1a; line-height: 1.5; background: #f3f4f6; }
+        .toolbar { max-width: 720px; margin: 0 auto; padding: 12px 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn { border: 0; border-radius: 8px; padding: 10px 14px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-back { background: #e5e7eb; color: #374151; }
+        .btn-print { background: #2563eb; color: #fff; }
+        .btn-share { background: #10b981; color: #fff; }
+        .btn-pdf { background: #fff; color: #2563eb; border: 1px solid #bfdbfe; }
+        .container { padding: 24px 20px 32px; max-width: 720px; margin: 0 auto; background: #fff; }
         .header { border-bottom: 2px solid #2563eb; padding-bottom: 16px; margin-bottom: 24px; }
         .header h1 { font-size: 22px; color: #2563eb; margin-bottom: 2px; }
-        .header p { font-size: 11px; color: #666; }
-        .invoice-meta { margin-bottom: 24px; }
-        .invoice-meta table { width: 100%; }
-        .invoice-meta td { vertical-align: top; padding: 2px 0; }
-        .invoice-meta .label { color: #666; width: 120px; }
+        .header p { font-size: 12px; color: #666; }
         .section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #666; letter-spacing: 0.5px; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
         .info-box { margin-bottom: 20px; }
         .info-box table { width: 100%; }
-        .info-box td { padding: 3px 0; }
+        .info-box td { padding: 4px 0; vertical-align: top; }
         .info-box .label { color: #666; width: 130px; }
-        .amount-box { background: #f0f9ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 16px 20px; margin: 24px 0; }
-        .amount-box .amount { font-size: 20px; font-weight: bold; color: #1d4ed8; }
-        .amount-box .terbilang { font-size: 11px; color: #555; margin-top: 4px; font-style: italic; }
-        .status-badge { display: inline-block; background: #dcfce7; color: #166534; font-weight: bold; font-size: 13px; padding: 4px 12px; border-radius: 4px; letter-spacing: 1px; }
-        .footer { margin-top: 40px; border-top: 1px solid #e5e7eb; padding-top: 16px; text-align: center; font-size: 10px; color: #888; }
+        .amount-box { background: #f0f9ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px 20px; margin: 24px 0; }
+        .amount-box .amount { font-size: 24px; font-weight: bold; color: #1d4ed8; }
+        .amount-box .terbilang { font-size: 12px; color: #555; margin-top: 4px; font-style: italic; }
+        .status-badge { display: inline-block; background: #dcfce7; color: #166534; font-weight: bold; font-size: 12px; padding: 4px 12px; border-radius: 999px; }
+        .footer { margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 16px; text-align: center; font-size: 11px; color: #888; }
         .text-right { text-align: right; }
+        .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #111827; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 50; }
+        .toast.show { opacity: 1; }
+        @media print {
+            body { background: #fff; }
+            .toolbar, .toast { display: none !important; }
+            .container { max-width: none; padding: 0; }
+        }
     </style>
 </head>
 <body>
 @php
     $pelanggan = $tagihan->pelanggan;
-    $periode = \Carbon\Carbon::createFromDate($tagihan->tahun, $tagihan->bulan, 1)->translatedFormat('F Y');
+    $periode = \Carbon\Carbon::createFromDate($tagihan->tahun, $tagihan->bulan, 1)->locale('id')->translatedFormat('F Y');
+    $shareText = $tagihan->invoiceShareText();
 @endphp
+
+<div class="toolbar">
+    @unless($isPublic ?? false)
+        <button type="button" class="btn btn-back" onclick="history.back()">← Kembali</button>
+    @endunless
+    <button type="button" class="btn btn-share" onclick="shareInvoiceTagihan(@js($shareText))">Bagikan</button>
+    <button type="button" class="btn btn-print" onclick="window.print()">Cetak</button>
+    @unless($isPublic ?? false)
+        <a href="{{ route('tagihan.invoice', ['tagihan' => $tagihan, 'pdf' => 1]) }}" class="btn btn-pdf">Unduh PDF</a>
+    @endunless
+</div>
+
 <div class="container">
     <div class="header">
         <table width="100%">
@@ -41,7 +64,7 @@
                     <p>Bukti Pembayaran / Invoice</p>
                 </td>
                 <td class="text-right">
-                    <p style="font-size: 14px; font-weight: bold;">{{ $tagihan->nomor_invoice }}</p>
+                    <p style="font-size: 15px; font-weight: bold;">{{ $tagihan->nomor_invoice }}</p>
                     <p style="font-size: 11px; color: #666;">Dicetak: {{ now()->format('d/m/Y H:i') }}</p>
                 </td>
             </tr>
@@ -99,7 +122,7 @@
     </div>
 
     <div class="amount-box">
-        <p style="font-size: 11px; color: #666; margin-bottom: 4px;">Total Pembayaran</p>
+        <p style="font-size: 12px; color: #666; margin-bottom: 4px;">Total Pembayaran</p>
         <p class="amount">Rp {{ number_format($tagihan->nominal, 0, ',', '.') }}</p>
         @if($pelanggan->bulanan?->terbilang)
             <p class="terbilang">Terbilang: {{ $pelanggan->bulanan->terbilang }} Rupiah</p>
@@ -118,5 +141,53 @@
         <p style="margin-top: 4px;">{{ $tagihan->nomor_invoice }} · {{ $periode }}</p>
     </div>
 </div>
+
+<div id="invoiceToast" class="toast" role="status"></div>
+
+<script>
+function showInvoiceToast(message) {
+    var toast = document.getElementById('invoiceToast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(function () { toast.classList.remove('show'); }, 2500);
+}
+
+function copyInvoiceText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function (resolve, reject) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            resolve();
+        } catch (e) {
+            document.body.removeChild(ta);
+            reject(e);
+        }
+    });
+}
+
+function shareInvoiceTagihan(text) {
+    if (navigator.share) {
+        navigator.share({ text: text }).catch(function () {
+            copyInvoiceText(text)
+                .then(function () { showInvoiceToast('Pesan disalin. Tempel di WhatsApp.'); })
+                .catch(function () { window.location.href = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(text); });
+        });
+        return;
+    }
+
+    copyInvoiceText(text)
+        .then(function () { showInvoiceToast('Pesan disalin. Tempel di WhatsApp.'); })
+        .catch(function () { window.location.href = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(text); });
+}
+</script>
 </body>
 </html>
