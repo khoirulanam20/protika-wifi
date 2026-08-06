@@ -27,3 +27,18 @@
     <button @click="show = false" class="text-red-400/60 hover:text-red-400">✕</button>
 </div>
 @endif
+
+@if(session('warning'))
+<div x-data="{ show: true }" x-show="show" x-transition
+     x-init="setTimeout(() => show = false, 6000)"
+     class="flex items-center justify-between gap-3 px-5 py-4 rounded-xl mb-5
+            bg-amber-500/15 border border-amber-500/30">
+    <div class="flex items-center gap-3">
+        <svg class="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="text-amber-700 text-sm font-medium">{{ session('warning') }}</p>
+    </div>
+    <button @click="show = false" class="text-amber-500/60 hover:text-amber-600">✕</button>
+</div>
+@endif

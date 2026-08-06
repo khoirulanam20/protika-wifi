@@ -16,6 +16,8 @@ use App\Http\Controllers\Api\WilayahController;
 
 Route::get('/', fn() => redirect()->route('login'));
 
+Route::get('/csrf-token', fn () => response()->json(['token' => csrf_token()]))->name('csrf-token');
+
 Route::get('/invoice/{tagihan}', [TagihanController::class, 'invoicePublic'])
     ->middleware('signed')
     ->name('tagihan.invoice.public');

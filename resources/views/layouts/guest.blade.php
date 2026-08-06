@@ -29,6 +29,11 @@
             {{-- Login Card --}}
             <div class="w-full max-w-md animate-fade-in-up" style="animation-delay: 0.1s;">
                 <div class="bg-white/70 backdrop-blur-xl border border-white/40 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8">
+                    @if(session('warning'))
+                    <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+                        {{ session('warning') }}
+                    </div>
+                    @endif
                     {{ $slot }}
                 </div>
 
