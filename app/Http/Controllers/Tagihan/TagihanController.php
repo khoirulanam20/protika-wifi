@@ -274,8 +274,7 @@ class TagihanController extends Controller
         $tagihan = $this->resolveInvoiceTagihan($tagihan);
 
         if ($request->boolean('pdf')) {
-            return Pdf::loadView('tagihan.invoice-pdf', compact('tagihan'))
-                ->download("{$tagihan->nomor_invoice}.pdf");
+            return redirect()->route('tagihan.invoice.pdf', $tagihan);
         }
 
         return view('tagihan.invoice', [
@@ -284,19 +283,35 @@ class TagihanController extends Controller
         ]);
     }
 
+    public function downloadInvoicePdf(Tagihan $tagihan)
+    {
+        $this->authorizeTagihanAccess($tagihan);
+        $tagihan = $this->resolveInvoiceTagihan($tagihan);
+
+        return $this->makeInvoicePdf($tagihan)
+            ->download("{$tagihan->nomor_invoice}.pdf");
+    }
+
     public function invoicePublic(Request $request, Tagihan $tagihan)
     {
         $tagihan = $this->resolveInvoiceTagihan($tagihan);
 
         if ($request->boolean('pdf')) {
-            return Pdf::loadView('tagihan.invoice-pdf', compact('tagihan'))
-                ->stream("{$tagihan->nomor_invoice}.pdf");
+            return redirect()->signedRoute('tagihan.invoice.public.pdf', $tagihan);
         }
 
         return view('tagihan.invoice', [
             'tagihan'  => $tagihan,
             'isPublic' => true,
         ]);
+    }
+
+    public function downloadInvoicePdfPublic(Tagihan $tagihan)
+    {
+        $tagihan = $this->resolveInvoiceTagihan($tagihan);
+
+        return $this->makeInvoicePdf($tagihan)
+            ->download("{$tagihan->nomor_invoice}.pdf");
     }
 
     // -----------------------------------------------------------------------
@@ -339,6 +354,11 @@ class TagihanController extends Controller
     /**
      * Helper to notify superadmin and kolektor when tagihan is paid
      */
+    private function makeInvoicePdf(Tagihan $tagihan)
+    {
+        return Pdf::loadView('tagihan.invoice-pdf', compact('tagihan'));
+    }
+
     private function resolveInvoiceTagihan(Tagihan $tagihan): Tagihan
     {
         if ($tagihan->status !== 'lunas') {

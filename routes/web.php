@@ -19,6 +19,9 @@ Route::get('/', fn() => redirect()->route('login'));
 Route::get('/invoice/{tagihan}', [TagihanController::class, 'invoicePublic'])
     ->middleware('signed')
     ->name('tagihan.invoice.public');
+Route::get('/invoice/{tagihan}/pdf', [TagihanController::class, 'downloadInvoicePdfPublic'])
+    ->middleware('signed')
+    ->name('tagihan.invoice.public.pdf');
 
 // API Wilayah Routes
 Route::prefix('api/wilayah')->middleware(['auth'])->group(function () {
@@ -69,6 +72,7 @@ Route::middleware(['auth'])->group(function () {
              ->middleware('role:superadmin');
         Route::post('/tagihan/{tagihan}/lunas-cepat', [TagihanController::class, 'lunaskanCepat'])->name('tagihan.lunas-cepat');
         Route::post('/tagihan/{tagihan}/batal-lunas', [TagihanController::class, 'batalLunas'])->name('tagihan.batal-lunas');
+        Route::get('/tagihan/{tagihan}/invoice/pdf', [TagihanController::class, 'downloadInvoicePdf'])->name('tagihan.invoice.pdf');
         Route::get('/tagihan/{tagihan}/invoice', [TagihanController::class, 'invoice'])->name('tagihan.invoice');
         Route::resource('tagihan',      TagihanController::class);
     });

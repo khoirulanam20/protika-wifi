@@ -49,10 +49,10 @@
         <button type="button" class="btn btn-back" onclick="history.back()">← Kembali</button>
     @endunless
     <button type="button" class="btn btn-share" onclick="shareInvoiceTagihan(@js($shareText))">Bagikan</button>
-    <button type="button" class="btn btn-print" onclick="window.print()">Cetak</button>
-    @unless($isPublic ?? false)
-        <a href="{{ route('tagihan.invoice', ['tagihan' => $tagihan, 'pdf' => 1]) }}" class="btn btn-pdf">Unduh PDF</a>
-    @endunless
+    <button type="button" class="btn btn-print" id="btnPrint" onclick="window.print()">Cetak</button>
+    <a href="{{ ($isPublic ?? false) ? URL::signedRoute('tagihan.invoice.public.pdf', $tagihan) : route('tagihan.invoice.pdf', $tagihan) }}"
+       download="{{ $tagihan->nomor_invoice }}.pdf"
+       class="btn btn-pdf">Unduh PDF</a>
 </div>
 
 <div class="container">
@@ -173,6 +173,14 @@ function copyInvoiceText(text) {
         }
     });
 }
+
+(function () {
+    var isWebView = /wv|WebView/i.test(navigator.userAgent) || window.DownloadChannel;
+    if (isWebView) {
+        var btnPrint = document.getElementById('btnPrint');
+        if (btnPrint) btnPrint.style.display = 'none';
+    }
+})();
 
 function shareInvoiceTagihan(text) {
     if (navigator.share) {
