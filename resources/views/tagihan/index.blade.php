@@ -269,7 +269,10 @@
                                                 </svg>
                                             </a>
                                             <button type="button"
-                                                onclick="shareInvoiceTagihan(@js($item->invoiceShareText()))"
+                                                data-share-pdf
+                                                data-pdf-url="{{ route('tagihan.invoice.pdf', $item) }}"
+                                                data-filename="{{ $item->nomor_invoice }}.pdf"
+                                                onclick="shareInvoiceTagihan(@js($item->invoiceShareText()), @js(route('tagihan.invoice.pdf', $item)), @js($item->nomor_invoice . '.pdf'))"
                                                 class="p-1 md:p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-colors"
                                                 title="Bagikan Invoice">
                                                 <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -527,7 +530,7 @@
                     }
                 }));
 
-                window.shareInvoiceTagihan = window.shareInvoiceTagihan || function (text) {
+                window.shareInvoiceTagihan = window.shareInvoiceTagihan || function (text, pdfUrl, pdfFilename) {
                     function showToast(message) {
                         alert(message);
                     }
@@ -552,6 +555,12 @@
                                 reject(e);
                             }
                         });
+                    }
+
+                    // Di APK → share file PDF ke WhatsApp via native bridge
+                    if (window.SwfApp && window.SwfApp.sharePdf && pdfUrl) {
+                        window.SwfApp.sharePdf(pdfUrl, pdfFilename || 'invoice.pdf');
+                        return;
                     }
 
                     if (navigator.share) {

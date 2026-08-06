@@ -45,16 +45,24 @@
     $pelanggan = $tagihan->pelanggan;
     $periode = \Carbon\Carbon::createFromDate($tagihan->tahun, $tagihan->bulan, 1)->locale('id')->translatedFormat('F Y');
     $shareText = $tagihan->invoiceShareText();
+    $pdfUrl = ($isPublic ?? false)
+        ? URL::signedRoute('tagihan.invoice.public.pdf', $tagihan)
+        : route('tagihan.invoice.pdf', $tagihan);
+    $pdfFilename = $tagihan->nomor_invoice . '.pdf';
 @endphp
 
-<div class="toolbar">
+    <div class="toolbar">
     @unless($isPublic ?? false)
         <button type="button" class="btn btn-back" onclick="history.back()">← Kembali</button>
     @endunless
-    <button type="button" class="btn btn-share" onclick="shareInvoiceTagihan(@js($shareText))">Bagikan</button>
+    <button type="button" class="btn btn-share"
+        data-share-pdf
+        data-pdf-url="{{ $pdfUrl }}"
+        data-filename="{{ $pdfFilename }}"
+        onclick="shareInvoiceTagihan(@js($shareText), @js($pdfUrl), @js($pdfFilename))">Bagikan</button>
     <button type="button" class="btn btn-print" id="btnPrint" onclick="window.print()">Cetak</button>
-    <a href="{{ ($isPublic ?? false) ? URL::signedRoute('tagihan.invoice.public.pdf', $tagihan) : route('tagihan.invoice.pdf', $tagihan) }}"
-       download="{{ $tagihan->nomor_invoice }}.pdf"
+    <a href="{{ $pdfUrl }}"
+       download="{{ $pdfFilename }}"
        class="btn btn-pdf">Unduh PDF</a>
 </div>
 
@@ -183,14 +191,23 @@ function copyInvoiceText(text) {
 }
 
 (function () {
-    var isWebView = /wv|WebView/i.test(navigator.userAgent) || window.DownloadChannel;
+    var isWebView = /wv|WebView/i.test(navigator.userAgent)
+        || window.DownloadChannel
+        || window.ShareChannel;
     if (isWebView) {
         var btnPrint = document.getElementById('btnPrint');
         if (btnPrint) btnPrint.style.display = 'none';
     }
 })();
 
-function shareInvoiceTagihan(text) {
+function shareInvoiceTagihan(text, pdfUrl, pdfFilename) {
+    // Di APK → share file PDF ke WhatsApp via native bridge
+    if (window.SwfApp && window.SwfApp.sharePdf && pdfUrl) {
+        window.SwfApp.sharePdf(pdfUrl, pdfFilename || 'invoice.pdf');
+        return;
+    }
+
+    // Di browser → fallback share teks seperti sebelumnya
     if (navigator.share) {
         navigator.share({ text: text }).catch(function () {
             copyInvoiceText(text)
