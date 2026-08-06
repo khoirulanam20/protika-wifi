@@ -4,9 +4,7 @@
         <div class="flex items-center gap-4 md:gap-6">
             {{-- Logo Pill --}}
             <div class="flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-full border border-border bg-white shadow-sm">
-                <div
-                    class="w-5 h-5 md:w-6 md:h-6 rounded-full bg-primary flex items-center justify-center text-content-primary font-bold text-xs">
-                    P</div>
+                <x-application-logo class="w-5 h-5 md:w-6 md:h-6" />
                 <span class="font-semibold text-content-primary text-xs md:text-sm">Protika</span>
             </div>
 

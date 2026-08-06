@@ -6,10 +6,7 @@
 
     {{-- Logo --}}
     <div class="flex items-center gap-3 px-5 py-5 border-b border-border">
-        <div class="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-xl text-content-primary
-                    bg-gradient-to-br from-purple-500 to-indigo-600 shadow-lg shadow-purple-500/40">
-            P
-        </div>
+        <x-application-logo class="w-10 h-10" />
         <div>
             <p class="text-content-primary font-bold text-base leading-tight">Protika</p>
             <p class="text-content-secondary text-xs">Sistem Tagihan WiFi</p>

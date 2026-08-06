@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $tagihan->nomor_invoice }} — Protika WiFi</title>
+    <link rel="icon" type="image/png" href="{{ asset('icon_protika.png') }}">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; color: #1a1a1a; line-height: 1.5; background: #f3f4f6; }
@@ -15,6 +16,8 @@
         .btn-pdf { background: #fff; color: #2563eb; border: 1px solid #bfdbfe; }
         .container { padding: 24px 20px 32px; max-width: 720px; margin: 0 auto; background: #fff; }
         .header { border-bottom: 2px solid #2563eb; padding-bottom: 16px; margin-bottom: 24px; }
+        .header-brand { display: flex; align-items: center; gap: 10px; }
+        .header-logo { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
         .header h1 { font-size: 22px; color: #2563eb; margin-bottom: 2px; }
         .header p { font-size: 12px; color: #666; }
         .section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #666; letter-spacing: 0.5px; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
@@ -60,8 +63,13 @@
         <table width="100%">
             <tr>
                 <td>
-                    <h1>Protika WiFi</h1>
-                    <p>Bukti Pembayaran / Invoice</p>
+                    <div class="header-brand">
+                        <img src="{{ asset('icon_protika.png') }}" alt="Protika WiFi" class="header-logo">
+                        <div>
+                            <h1>Protika WiFi</h1>
+                            <p>Bukti Pembayaran / Invoice</p>
+                        </div>
+                    </div>
                 </td>
                 <td class="text-right">
                     <p style="font-size: 15px; font-weight: bold;">{{ $tagihan->nomor_invoice }}</p>

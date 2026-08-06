@@ -8,6 +8,8 @@
     <meta name="notifications-index-url" content="{{ route('notifications.index') }}">
     @endauth
     <title>@yield('title', 'Dashboard') — Protika WiFi</title>
+    <link rel="icon" type="image/png" href="{{ asset('icon_protika.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('icon_protika.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 </head>

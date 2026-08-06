@@ -8,6 +8,8 @@
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #1a1a1a; line-height: 1.5; }
         .container { padding: 32px 40px; }
         .header { border-bottom: 2px solid #2563eb; padding-bottom: 16px; margin-bottom: 24px; }
+        .header-brand { display: flex; align-items: center; gap: 10px; }
+        .header-logo { width: 40px; height: 40px; border-radius: 6px; }
         .header h1 { font-size: 22px; color: #2563eb; margin-bottom: 2px; }
         .header p { font-size: 11px; color: #666; }
         .section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #666; letter-spacing: 0.5px; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
@@ -33,8 +35,13 @@
         <table width="100%">
             <tr>
                 <td>
-                    <h1>Protika WiFi</h1>
-                    <p>Bukti Pembayaran / Invoice</p>
+                    <div class="header-brand">
+                        <img src="{{ public_path('icon_protika.png') }}" alt="Protika WiFi" class="header-logo">
+                        <div>
+                            <h1>Protika WiFi</h1>
+                            <p>Bukti Pembayaran / Invoice</p>
+                        </div>
+                    </div>
                 </td>
                 <td class="text-right">
                     <p style="font-size: 14px; font-weight: bold;">{{ $tagihan->nomor_invoice }}</p>

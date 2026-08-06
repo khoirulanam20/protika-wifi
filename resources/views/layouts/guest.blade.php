@@ -6,6 +6,8 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Protika WiFi') }} — Login</title>
+        <link rel="icon" type="image/png" href="{{ asset('icon_protika.png') }}">
+        <link rel="apple-touch-icon" href="{{ asset('icon_protika.png') }}">
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -19,9 +21,7 @@
             {{-- Branding --}}
             <div class="mb-8 animate-fade-in-up">
                 <a href="/" class="inline-flex items-center gap-2.5 px-5 py-2 rounded-full border border-border bg-white/70 backdrop-blur-sm shadow-sm">
-                    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                        P
-                    </div>
+                    <x-application-logo class="w-8 h-8" />
                     <span class="font-semibold text-content-primary text-lg">Protika WiFi</span>
                 </a>
             </div>
