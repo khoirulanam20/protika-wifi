@@ -70,8 +70,8 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:superadmin|kolektor|admin_desa'])->group(function () {
         Route::get('/tagihan/rekap',      [RekapController::class, 'index'])->name('tagihan.rekap');
         Route::post('/tagihan/lunas-banyak', [TagihanController::class, 'lunaskanBanyak'])->name('tagihan.lunas-banyak');
-        Route::get('/tagihan/rekap/export', [RekapController::class, 'export'])->name('tagihan.rekap.export')
-             ->middleware('role:superadmin');
+        Route::get('/tagihan/rekap/export', [RekapController::class, 'export'])->name('tagihan.rekap.export');
+        Route::get('/tagihan/export', [TagihanController::class, 'export'])->name('tagihan.export');
         Route::post('/tagihan/{tagihan}/lunas-cepat', [TagihanController::class, 'lunaskanCepat'])->name('tagihan.lunas-cepat');
         Route::post('/tagihan/{tagihan}/batal-lunas', [TagihanController::class, 'batalLunas'])->name('tagihan.batal-lunas');
         Route::get('/tagihan/{tagihan}/invoice/pdf', [TagihanController::class, 'downloadInvoicePdf'])->name('tagihan.invoice.pdf');

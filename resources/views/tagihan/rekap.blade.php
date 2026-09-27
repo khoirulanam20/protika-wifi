@@ -89,14 +89,12 @@
 <div class="card overflow-hidden">
     <div class="px-6 py-5 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 class="text-content-primary font-semibold text-lg">Laporan Rincian</h2>
-        @role('superadmin')
         <a href="{{ route('tagihan.rekap.export', request()->query()) }}" class="btn-secondary">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
             Ekspor Excel
         </a>
-        @endrole
     </div>
 
     <div class="overflow-x-auto">
@@ -104,6 +102,8 @@
             <thead>
                 <tr class="text-content-tertiary text-left border-b border-border">
                     <th class="px-6 py-4 font-semibold uppercase tracking-wider">Pelanggan</th>
+                    <th class="px-6 py-4 font-semibold uppercase tracking-wider">Desa</th>
+                    <th class="px-6 py-4 font-semibold uppercase tracking-wider">Dusun</th>
                     <th class="px-6 py-4 font-semibold uppercase tracking-wider">Kolektor</th>
                     <th class="px-6 py-4 font-semibold uppercase tracking-wider">Periode Tagihan</th>
                     <th class="px-6 py-4 font-semibold uppercase tracking-wider">Tanggal Bayar</th>
@@ -115,6 +115,8 @@
                 @forelse($rekap as $item)
                 <tr class="hover:bg-base-page transition-colors">
                     <td class="px-6 py-4 text-content-primary">{{ $item->pelanggan->nama_pelanggan }}</td>
+                    <td class="px-6 py-4 text-content-secondary">{{ $item->pelanggan->desa ?? '—' }}</td>
+                    <td class="px-6 py-4 text-content-secondary">{{ $item->pelanggan->dusun?->dusun ?? '—' }}</td>
                     <td class="px-6 py-4 text-content-secondary">{{ $item->kolektor?->nama_kolektor ?? '—' }}</td>
                     <td class="px-6 py-4 text-content-secondary">{{ $item->bulan }}/{{ $item->tahun }}</td>
                     <td class="px-6 py-4 text-content-secondary">
@@ -138,7 +140,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="px-6 py-10 text-center text-content-tertiary">Data tidak ditemukan.</td>
+                    <td colspan="8" class="px-6 py-10 text-center text-content-tertiary">Data tidak ditemukan.</td>
                 </tr>
                 @endforelse
             </tbody>

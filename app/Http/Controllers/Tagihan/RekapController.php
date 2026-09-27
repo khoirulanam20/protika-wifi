@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Tagihan;
 
+use App\Exports\RekapLaporanExport;
 use App\Http\Controllers\Controller;
 use App\Models\Tagihan;
 use App\Models\MasterKolektor;
@@ -25,9 +26,11 @@ class RekapController extends Controller
             ? ($request->filled('tahun') ? (int) $request->tahun : null)
             : now()->year;
 
-        $statusFilter = $request->filled('status') ? $request->status : null;
         $isKolektorOnly = auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin');
         $isAdminDesaOnly = AdminDesaScope::isAdminDesaOnly();
+
+        $merged = $this->rekapMergedItems($request, $bulan, $tahun, $isKolektorOnly, $isAdminDesaOnly);
+        $statusFilter = $request->filled('status') ? $request->status : null;
 
         $currentQuery = $this->baseRekapQuery($request, $isKolektorOnly, $isAdminDesaOnly);
         $currentQuery->when($bulan, fn ($q) => $q->where('bulan', $bulan))
@@ -44,20 +47,7 @@ class RekapController extends Controller
 
         $pelunasanQuery = $this->baseRekapQuery($request, $isKolektorOnly, $isAdminDesaOnly);
         $this->applyPelunasanPrevScope($pelunasanQuery, $bulan, $tahun);
-
         $totalPelunasanPrev = (clone $pelunasanQuery)->sum('terbayar');
-
-        if ($statusFilter === 'pelunasan_bulan_sebelumnya') {
-            $merged = $pelunasanQuery->latest('tanggal_bayar')->get()
-                ->each(fn ($item) => $item->setAttribute('is_pelunasan_prev', true));
-        } elseif ($statusFilter) {
-            $merged = $currentQuery->latest()->get();
-        } else {
-            $currentItems = $currentQuery->latest()->get();
-            $prevItems = $pelunasanQuery->latest('tanggal_bayar')->get()
-                ->each(fn ($item) => $item->setAttribute('is_pelunasan_prev', true));
-            $merged = $currentItems->concat($prevItems)->sortByDesc(fn ($item) => $item->tanggal_bayar ?? $item->created_at)->values();
-        }
 
         $perPage = 50;
         $page = LengthAwarePaginator::resolveCurrentPage();
@@ -115,13 +105,67 @@ class RekapController extends Controller
 
     public function export(Request $request)
     {
-        // Implementation for Excel export would go here using maatwebsite/excel
-        return back()->with('success', 'Fitur ekspor sedang disiapkan.');
+        $bulan = $request->has('bulan')
+            ? ($request->filled('bulan') ? (int) $request->bulan : null)
+            : now()->month;
+
+        $tahun = $request->has('tahun')
+            ? ($request->filled('tahun') ? (int) $request->tahun : null)
+            : now()->year;
+
+        $isKolektorOnly = auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin');
+        $isAdminDesaOnly = AdminDesaScope::isAdminDesaOnly();
+
+        $items = $this->rekapMergedItems($request, $bulan, $tahun, $isKolektorOnly, $isAdminDesaOnly);
+
+        $filename = $bulan && $tahun
+            ? sprintf('rekap-laporan-%02d-%d.xlsx', $bulan, $tahun)
+            : 'rekap-laporan.xlsx';
+
+        return Excel::download(new RekapLaporanExport($items), $filename);
+    }
+
+    private function rekapMergedItems(
+        Request $request,
+        ?int $bulan,
+        ?int $tahun,
+        bool $isKolektorOnly,
+        bool $isAdminDesaOnly,
+    ) {
+        $statusFilter = $request->filled('status') ? $request->status : null;
+
+        $currentQuery = $this->baseRekapQuery($request, $isKolektorOnly, $isAdminDesaOnly);
+        $currentQuery->when($bulan, fn ($q) => $q->where('bulan', $bulan))
+            ->when($tahun, fn ($q) => $q->where('tahun', $tahun));
+
+        if ($statusFilter && $statusFilter !== 'pelunasan_bulan_sebelumnya') {
+            $currentQuery->where('status', $statusFilter);
+        }
+
+        $pelunasanQuery = $this->baseRekapQuery($request, $isKolektorOnly, $isAdminDesaOnly);
+        $this->applyPelunasanPrevScope($pelunasanQuery, $bulan, $tahun);
+
+        if ($statusFilter === 'pelunasan_bulan_sebelumnya') {
+            return $pelunasanQuery->latest('tanggal_bayar')->get()
+                ->each(fn ($item) => $item->setAttribute('is_pelunasan_prev', true));
+        }
+
+        if ($statusFilter) {
+            return $currentQuery->latest()->get();
+        }
+
+        $currentItems = $currentQuery->latest()->get();
+        $prevItems = $pelunasanQuery->latest('tanggal_bayar')->get()
+            ->each(fn ($item) => $item->setAttribute('is_pelunasan_prev', true));
+
+        return $currentItems->concat($prevItems)
+            ->sortByDesc(fn ($item) => $item->tanggal_bayar ?? $item->created_at)
+            ->values();
     }
 
     private function baseRekapQuery(Request $request, bool $isKolektorOnly, bool $isAdminDesaOnly)
     {
-        $query = Tagihan::with(['pelanggan', 'kolektor']);
+        $query = Tagihan::with(['pelanggan.dusun', 'kolektor']);
 
         if ($isKolektorOnly) {
             $query->where('kolektor_id', auth()->user()->kolektor_id);

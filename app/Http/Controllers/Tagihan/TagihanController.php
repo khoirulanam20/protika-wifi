@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Tagihan;
 
+use App\Exports\TagihanDaftarExport;
 use App\Http\Controllers\Controller;
 use App\Models\Tagihan;
 use App\Models\MasterKolektor;
@@ -11,6 +12,7 @@ use App\Support\AdminDesaScope;
 use App\Support\WilayahFilter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Notifications\TagihanTerbayarNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -25,28 +27,9 @@ class TagihanController extends Controller
         $isKolektorOnly = auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin');
         $isAdminDesaOnly = AdminDesaScope::isAdminDesaOnly();
 
-        $query = Tagihan::with(['pelanggan.bulanan', 'pelanggan', 'kolektor']);
-
-        if ($isKolektorOnly) {
-            $query->where('kolektor_id', auth()->user()->kolektor_id);
-        } elseif ($isAdminDesaOnly) {
-            AdminDesaScope::applyTagihanScope($query);
-        }
-
-        // Generate tagihan otomatis yang belum ada untuk pelanggan aktif
         $this->generateTagihanBulanIni($now, auth()->user());
 
-        $query->when($bulan,              fn($q, $v) => $q->where('bulan',  $v))
-              ->when($tahun,              fn($q, $v) => $q->where('tahun',  $v))
-              ->when($request->status,   fn($q, $v) => $q->where('status', $v))
-              ->when($request->search,   fn($q, $v) => $q->whereHas('pelanggan', fn($p) => $p->where('nama_pelanggan', 'like', "%$v%")));
-
-        if (!$isKolektorOnly) {
-            $query->when($request->kolektor_id, fn($q, $v) => $q->where('kolektor_id', $v));
-        }
-
-        WilayahFilter::applyViaPelanggan($query, $request);
-
+        $query = $this->tagihanListQuery($request, $bulan, $tahun);
         $tagihan = $query->latest()->paginate(20)->withQueryString();
 
         // Hitung tunggakan (tagihan belum lunas/sebagian dari bulan-bulan sebelumnya)
@@ -102,6 +85,23 @@ class TagihanController extends Controller
             'kolektorList',
             'activeFilterCount'
         ));
+    }
+
+    public function export(Request $request)
+    {
+        $now = Carbon::now();
+        $bulan = (int) ($request->bulan ?? $now->month);
+        $tahun = (int) ($request->tahun ?? $now->year);
+
+        $this->generateTagihanBulanIni($now, auth()->user());
+
+        $items = $this->tagihanListQuery($request, $bulan, $tahun)
+            ->latest()
+            ->get();
+
+        $filename = sprintf('tagihan-%02d-%d.xlsx', $bulan, $tahun);
+
+        return Excel::download(new TagihanDaftarExport($bulan, $tahun, $items), $filename);
     }
 
     public function create()
@@ -354,6 +354,33 @@ class TagihanController extends Controller
     /**
      * Helper to notify superadmin and kolektor when tagihan is paid
      */
+    private function tagihanListQuery(Request $request, int $bulan, int $tahun)
+    {
+        $isKolektorOnly = auth()->user()->hasRole('kolektor') && !auth()->user()->hasRole('superadmin');
+        $isAdminDesaOnly = AdminDesaScope::isAdminDesaOnly();
+
+        $query = Tagihan::with(['pelanggan.dusun', 'pelanggan.bulanan', 'kolektor']);
+
+        if ($isKolektorOnly) {
+            $query->where('kolektor_id', auth()->user()->kolektor_id);
+        } elseif ($isAdminDesaOnly) {
+            AdminDesaScope::applyTagihanScope($query);
+        }
+
+        $query->when($bulan, fn ($q, $v) => $q->where('bulan', $v))
+            ->when($tahun, fn ($q, $v) => $q->where('tahun', $v))
+            ->when($request->status, fn ($q, $v) => $q->where('status', $v))
+            ->when($request->search, fn ($q, $v) => $q->whereHas('pelanggan', fn ($p) => $p->where('nama_pelanggan', 'like', "%{$v}%")));
+
+        if (!$isKolektorOnly) {
+            $query->when($request->kolektor_id, fn ($q, $v) => $q->where('kolektor_id', $v));
+        }
+
+        WilayahFilter::applyViaPelanggan($query, $request);
+
+        return $query;
+    }
+
     private function makeInvoicePdf(Tagihan $tagihan)
     {
         return Pdf::loadView('tagihan.invoice-pdf', compact('tagihan'));
