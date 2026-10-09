@@ -266,7 +266,7 @@ class DashboardController extends Controller
 
     private function buildMonthPeriods(int $endBulan, int $endTahun): array
     {
-        $end = Carbon::createFromDate($endTahun, $endBulan, 1)->endOfMonth();
+        $end = Carbon::createFromDate($endTahun, $endBulan, 1)->startOfMonth();
         $periods = [];
 
         for ($i = 5; $i >= 0; $i--) {
