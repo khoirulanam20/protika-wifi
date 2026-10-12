@@ -15,7 +15,7 @@ class MasterAccountTest extends TestCase
 
     private function superadmin(): User
     {
-        foreach (['superadmin', 'kolektor', 'teknisi', 'admin_desa'] as $r) {
+        foreach (['superadmin', 'kolektor', 'teknisi', 'penagih', 'admin_desa'] as $r) {
             Role::firstOrCreate(['name' => $r, 'guard_name' => 'web']);
         }
         $u = User::factory()->create();
@@ -81,5 +81,21 @@ class MasterAccountTest extends TestCase
         $this->delete(route('master.teknisi.destroy', $t));
         $this->assertDatabaseMissing('users', ['email' => 'a@x.id']);
         $this->assertSame(0, MasterTeknisi::count());
+    }
+
+    public function test_penagih_created_with_account_and_lands_on_perbaikan(): void
+    {
+        $this->actingAs($this->superadmin())->post(route('master.penagih.store'), ['nama_penagih' => 'Sari'] + $this->account('sari@x.id'))
+            ->assertSessionHasNoErrors();
+
+        $u = User::where('email', 'sari@x.id')->firstOrFail();
+        $this->assertSame(\App\Models\MasterPenagih::first()->id, $u->penagih_id);
+        $this->assertTrue($u->hasRole('penagih'));
+        $this->assertSame('Sari', $u->petugasNama());
+
+        auth()->logout();
+        $this->post('/login', ['email' => 'sari@x.id', 'password' => 'password123'])->assertRedirect(route('perbaikan.index', absolute: false));
+        $this->get(route('perbaikan.index'))->assertOk();
+        $this->get('/dashboard')->assertForbidden();
     }
 }

@@ -34,7 +34,7 @@ class PerbaikanController extends Controller
 
     public function index(Request $request)
     {
-        $query = Perbaikan::with('user.teknisi', 'pelanggan');
+        $query = Perbaikan::with('user.teknisi', 'user.penagih', 'pelanggan');
 
         if (! $this->isSuperadmin()) {
             $query->where('user_id', auth()->id());
@@ -51,7 +51,7 @@ class PerbaikanController extends Controller
 
         $perbaikan = $query->orderByDesc('tanggal_perbaikan')->paginate(20)->withQueryString();
         $teknisiUsers = $this->isSuperadmin()
-            ? User::role('teknisi')->orderBy('name')->get(['id', 'name'])
+            ? User::role(['teknisi', 'penagih'])->orderBy('name')->get(['id', 'name'])
             : collect();
 
         return view('perbaikan.index', compact('perbaikan', 'teknisiUsers'));

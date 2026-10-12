@@ -36,7 +36,7 @@
     {{-- Navigation --}}
     <nav class="px-3 py-4 overflow-y-auto h-[calc(100vh-200px)] space-y-1">
 
-        @hasanyrole('superadmin|teknisi')
+        @hasanyrole('superadmin|teknisi|penagih')
         <a href="{{ route('perbaikan.index') }}"
            class="nav-item {{ request()->routeIs('perbaikan.*') ? 'nav-active' : '' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -49,7 +49,7 @@
         <form method="GET" class="pb-filter">
             @if($teknisiUsers->isNotEmpty())
                 <select name="user_id" class="input-field pb-full">
-                    <option value="">Semua Teknisi</option>
+                    <option value="">Semua Petugas</option>
                     @foreach($teknisiUsers as $t)
                         <option value="{{ $t->id }}" @selected(request('user_id') == $t->id)>{{ $t->name }}</option>
                     @endforeach
@@ -70,7 +70,7 @@
         <table class="w-full">
             <thead>
                 <tr class="border-b border-border">
-                    @foreach(['Foto', 'Waktu', 'Teknisi', 'Lokasi', 'Deskripsi', 'Aksi'] as $h)
+                    @foreach(['Foto', 'Waktu', 'Petugas', 'Lokasi', 'Deskripsi', 'Aksi'] as $h)
                         <th class="px-6 py-3 text-left text-xs font-semibold text-content-tertiary uppercase tracking-wider">{{ $h }}</th>
                     @endforeach
                 </tr>
@@ -86,7 +86,7 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 text-sm text-content-primary whitespace-nowrap">{{ $item->tanggal_perbaikan->format('d M Y H:i') }}</td>
-                        <td class="px-6 py-4 text-sm text-content-secondary">{{ $item->user->teknisi?->nama_teknisi ?? $item->user->name }}</td>
+                        <td class="px-6 py-4 text-sm text-content-secondary">{{ $item->user->petugasNama() }}</td>
                         <td class="px-6 py-4 text-sm text-content-secondary">
                             {{ $item->alamat ?: '—' }}<br>
                             <a href="{{ $item->maps_url }}" target="_blank" rel="noopener" class="text-primary text-xs">{{ $item->lokasi }} ↗</a>
@@ -122,7 +122,7 @@
                 @endif
                 <div class="pb-card-body">
                     <p class="text-sm font-semibold text-content-primary">{{ $item->tanggal_perbaikan->format('d M Y H:i') }}</p>
-                    <p class="text-xs text-content-secondary">{{ $item->user->teknisi?->nama_teknisi ?? $item->user->name }}@if($item->pelanggan) · {{ $item->pelanggan->nama_pelanggan }}@endif</p>
+                    <p class="text-xs text-content-secondary">{{ $item->user->petugasNama() }}@if($item->pelanggan) · {{ $item->pelanggan->nama_pelanggan }}@endif</p>
                     <p class="text-sm text-content-secondary">{{ \Illuminate\Support\Str::limit($item->deskripsi, 80) }}</p>
                     <a href="{{ $item->maps_url }}" target="_blank" rel="noopener" class="text-primary text-xs">{{ $item->alamat ?: $item->lokasi }} ↗</a>
                     <div class="pb-card-actions">

@@ -11,13 +11,13 @@
             mode: 'create',
             formAction: '{{ route('master.users.store') }}',
             formMethod: 'POST',
-            formData: { name: '{{ old('name') }}', email: '{{ old('email') }}', role: '{{ old('role') }}', kolektor_id: '{{ old('kolektor_id') }}', teknisi_id: '{{ old('teknisi_id') }}' },
+            formData: { name: '{{ old('name') }}', email: '{{ old('email') }}', role: '{{ old('role') }}', kolektor_id: '{{ old('kolektor_id') }}', teknisi_id: '{{ old('teknisi_id') }}', penagih_id: '{{ old('penagih_id') }}' },
 
             openCreate() {
                 this.mode = 'create';
                 this.formAction = '{{ route('master.users.store') }}';
                 this.formMethod = 'POST';
-                this.formData = { name: '', email: '', role: '', kolektor_id: '', teknisi_id: '' };
+                this.formData = { name: '', email: '', role: '', kolektor_id: '', teknisi_id: '', penagih_id: '' };
                 this.showModal = true;
             },
             openEdit(item, roleName) {
@@ -29,7 +29,8 @@
                     email: item.email,
                     role: roleName,
                     kolektor_id: item.kolektor_id || '',
-                    teknisi_id: item.teknisi_id || ''
+                    teknisi_id: item.teknisi_id || '',
+                    penagih_id: item.penagih_id || ''
                 };
                 this.showModal = true;
             }
@@ -64,7 +65,7 @@
                                 Kolektor</th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-semibold text-content-tertiary uppercase tracking-wider">
-                                Teknisi</th>
+                                Petugas</th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-semibold text-content-tertiary uppercase tracking-wider">
                                 Aksi</th>
@@ -87,7 +88,7 @@
                                     {{ $user->kolektor?->nama_kolektor ?? '—' }}
                                 </td>
                                 <td class="px-6 py-4 text-sm text-content-secondary">
-                                    {{ $user->teknisi?->nama_teknisi ?? '—' }}
+                                    {{ $user->teknisi?->nama_teknisi ?? $user->penagih?->nama_penagih ?? '—' }}
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-2">
@@ -197,6 +198,15 @@
                                     <option value="">Tidak ada mapping</option>
                                     @foreach($kolektor as $k)
                                         <option value="{{ $k->id }}">{{ $k->nama_kolektor }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div x-show="formData.role === 'penagih'">
+                                <label class="block text-content-secondary text-sm mb-2">Mapping Penagih (Opsional)</label>
+                                <select name="penagih_id" x-model="formData.penagih_id" class="input-field">
+                                    <option value="">Tidak ada mapping</option>
+                                    @foreach($penagih as $pn)
+                                        <option value="{{ $pn->id }}">{{ $pn->nama_penagih }}</option>
                                     @endforeach
                                 </select>
                             </div>

@@ -25,6 +25,7 @@ class User extends Authenticatable
         'kolektor_id',
         'admin_desa_id',
         'teknisi_id',
+        'penagih_id',
     ];
 
     /**
@@ -58,6 +59,17 @@ class User extends Authenticatable
     public function teknisi()
     {
         return $this->belongsTo(MasterTeknisi::class, 'teknisi_id');
+    }
+
+    public function penagih()
+    {
+        return $this->belongsTo(MasterPenagih::class, 'penagih_id');
+    }
+
+    /** Field-worker display name: linked master name, else account name. */
+    public function petugasNama(): string
+    {
+        return $this->teknisi?->nama_teknisi ?? $this->penagih?->nama_penagih ?? $this->name;
     }
 
     public function adminDesa()

@@ -11,16 +11,16 @@
             mode: 'create',
             formAction: '{{ route('master.penagih.store') }}',
             formMethod: 'POST',
-            formData: { nama_penagih: '{{ old('nama_penagih') }}', alamat: '{{ old('alamat') }}', kecamatan: '{{ old('kecamatan') }}', desa: '{{ old('desa') }}' },
+            formData: { nama_penagih: '{{ old('nama_penagih') }}', alamat: '{{ old('alamat') }}', kecamatan: '{{ old('kecamatan') }}', desa: '{{ old('desa') }}', email: '{{ old('email') }}', existingEmail: '' },
 
             openCreate() {
                 this.mode = 'create';
                 this.formAction = '{{ route('master.penagih.store') }}';
                 this.formMethod = 'POST';
-                this.formData = { nama_penagih: '', alamat: '', kecamatan: '', desa: '' };
+                this.formData = { nama_penagih: '', alamat: '', kecamatan: '', desa: '', email: '', existingEmail: '' };
                 this.showModal = true;
             },
-            openEdit(item) {
+            openEdit(item, existingEmail) {
                 this.mode = 'edit';
                 this.formAction = '/master/penagih/' + item.id;
                 this.formMethod = 'PUT';
@@ -28,7 +28,9 @@
                     nama_penagih: item.nama_penagih, 
                     alamat: item.alamat,
                     kecamatan: item.kecamatan,
-                    desa: item.desa
+                    desa: item.desa,
+                    email: existingEmail || '',
+                    existingEmail: existingEmail || ''
                 };
                 this.showModal = true;
             }
@@ -66,6 +68,9 @@
                                 Wilayah</th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-semibold text-content-tertiary uppercase tracking-wider">
+                                Akun</th>
+                            <th
+                                class="px-6 py-3 text-left text-xs font-semibold text-content-tertiary uppercase tracking-wider">
                                 Aksi</th>
                         </tr>
                     </thead>
@@ -75,9 +80,19 @@
                                 <td class="px-6 py-4 text-sm text-content-primary">{{ $item->nama_penagih }}</td>
                                 <td class="px-6 py-4 text-sm text-content-secondary">{{ $item->desa }}, {{ $item->kecamatan }}
                                 </td>
+                                <td class="px-6 py-4 text-sm">
+                                    @if($item->user)
+                                        <div>
+                                            <p class="text-content-primary font-medium text-xs">{{ $item->user->email }}</p>
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-status-success/10 text-status-success">Aktif</span>
+                                        </div>
+                                    @else
+                                        <span class="text-content-tertiary text-xs italic">Belum ada akun</span>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-2">
-                                        <button @click="openEdit({{ $item->toJson() }})"
+                                        <button @click="openEdit({{ $item->toJson() }}, '{{ optional($item->user)->email }}')"
                                             class="p-1.5 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-colors"
                                             title="Edit">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,7 +117,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3" class="px-6 py-10 text-center text-content-tertiary">Belum ada data penagih.
+                                <td colspan="4" class="px-6 py-10 text-center text-content-tertiary">Belum ada data penagih.
                                 </td>
                             </tr>
                         @endforelse
@@ -155,6 +170,28 @@
                         @else
                         @include('layouts.components.wilayah-fixed-admin-desa')
                         @endhasanyrole
+
+                        <div>
+                            <h4 class="text-sm font-semibold text-content-primary border-b border-border pb-2 mb-4">Akun Login</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="md:col-span-2">
+                                    <label class="block text-content-secondary text-sm mb-2">Email Login</label>
+                                    <input type="email" name="email" x-model="formData.email" class="input-field"
+                                        :placeholder="formData.existingEmail || 'contoh@email.com'">
+                                </div>
+                                <div>
+                                    <label class="block text-content-secondary text-sm mb-2">
+                                        Password
+                                        <span x-show="mode === 'edit'" class="text-xs text-content-tertiary">(kosongkan jika tidak diubah)</span>
+                                    </label>
+                                    <input type="password" name="password" class="input-field" placeholder="Min. 8 karakter">
+                                </div>
+                                <div>
+                                    <label class="block text-content-secondary text-sm mb-2">Konfirmasi Password</label>
+                                    <input type="password" name="password_confirmation" class="input-field" placeholder="Ulangi password">
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="px-6 py-4 border-t border-border flex justify-end gap-3 bg-base-page">

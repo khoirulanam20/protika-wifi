@@ -2,7 +2,7 @@
 
 @section('title', 'Detail Perbaikan')
 @section('page-title', 'Detail Perbaikan')
-@section('page-subtitle', $perbaikan->tanggal_perbaikan->format('d M Y H:i') . ' · ' . $perbaikan->user->name)
+@section('page-subtitle', $perbaikan->tanggal_perbaikan->format('d M Y H:i') . ' · ' . $perbaikan->user->petugasNama())
 
 @push('styles')
 <style>

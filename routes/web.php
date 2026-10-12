@@ -80,7 +80,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('tagihan',      TagihanController::class);
     });
 
-    Route::middleware(['role:superadmin|teknisi'])->group(function () {
+    Route::middleware(['role:superadmin|teknisi|penagih'])->group(function () {
         Route::resource('perbaikan', PerbaikanController::class)->parameters(['perbaikan' => 'perbaikan']);
     });
 

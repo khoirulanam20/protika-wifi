@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\MasterKolektor;
+use App\Models\MasterPenagih;
 use App\Models\MasterTeknisi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -14,11 +15,12 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::with('roles', 'kolektor', 'teknisi')->latest()->paginate(20);
+        $users = User::with('roles', 'kolektor', 'teknisi', 'penagih')->latest()->paginate(20);
         $roles = Role::all();
         $kolektor = MasterKolektor::all();
         $teknisi = MasterTeknisi::orderBy('nama_teknisi')->get();
-        return view('master.users.index', compact('users', 'roles', 'kolektor', 'teknisi'));
+        $penagih = MasterPenagih::orderBy('nama_penagih')->get();
+        return view('master.users.index', compact('users', 'roles', 'kolektor', 'teknisi', 'penagih'));
     }
 
     public function create()
@@ -37,6 +39,7 @@ class UserController extends Controller
             'role' => 'required|exists:roles,name',
             'kolektor_id' => 'nullable|exists:master_kolektor,id',
             'teknisi_id' => 'nullable|exists:master_teknisi,id',
+            'penagih_id' => 'nullable|exists:master_penagih,id',
         ]);
 
         $user = User::create([
@@ -45,6 +48,7 @@ class UserController extends Controller
             'password' => Hash::make($data['password']),
             'kolektor_id' => $data['kolektor_id'] ?? null,
             'teknisi_id' => $data['teknisi_id'] ?? null,
+            'penagih_id' => $data['penagih_id'] ?? null,
         ]);
 
         $user->assignRole($data['role']);
@@ -68,6 +72,7 @@ class UserController extends Controller
             'role' => 'required|exists:roles,name',
             'kolektor_id' => 'nullable|exists:master_kolektor,id',
             'teknisi_id' => 'nullable|exists:master_teknisi,id',
+            'penagih_id' => 'nullable|exists:master_penagih,id',
         ]);
 
         $user->update([
@@ -75,6 +80,7 @@ class UserController extends Controller
             'email' => $data['email'],
             'kolektor_id' => $data['kolektor_id'] ?? null,
             'teknisi_id' => $data['teknisi_id'] ?? null,
+            'penagih_id' => $data['penagih_id'] ?? null,
         ]);
 
         if ($data['password']) {

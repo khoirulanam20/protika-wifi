@@ -9,6 +9,11 @@ class MasterPenagih extends Model
     protected $table = 'master_penagih';
     protected $fillable = ['nama_penagih', 'alamat', 'kecamatan', 'desa'];
 
+    public function user()
+    {
+        return $this->hasOne(User::class, 'penagih_id');
+    }
+
     public function pelanggan()
     {
         return $this->hasMany(MasterPelanggan::class, 'penagih_id');

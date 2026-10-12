@@ -28,7 +28,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        $home = $request->user()->hasRole('teknisi') && ! $request->user()->hasAnyRole(['superadmin', 'kolektor', 'admin_desa'])
+        $home = $request->user()->hasAnyRole(['teknisi', 'penagih']) && ! $request->user()->hasAnyRole(['superadmin', 'kolektor', 'admin_desa'])
             ? route('perbaikan.index', absolute: false)
             : route('dashboard', absolute: false);
 
