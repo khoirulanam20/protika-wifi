@@ -11,13 +11,13 @@
             mode: 'create',
             formAction: '{{ route('master.users.store') }}',
             formMethod: 'POST',
-            formData: { name: '{{ old('name') }}', email: '{{ old('email') }}', role: '{{ old('role') }}', kolektor_id: '{{ old('kolektor_id') }}' },
+            formData: { name: '{{ old('name') }}', email: '{{ old('email') }}', role: '{{ old('role') }}', kolektor_id: '{{ old('kolektor_id') }}', teknisi_id: '{{ old('teknisi_id') }}' },
 
             openCreate() {
                 this.mode = 'create';
                 this.formAction = '{{ route('master.users.store') }}';
                 this.formMethod = 'POST';
-                this.formData = { name: '', email: '', role: '', kolektor_id: '' };
+                this.formData = { name: '', email: '', role: '', kolektor_id: '', teknisi_id: '' };
                 this.showModal = true;
             },
             openEdit(item, roleName) {
@@ -28,7 +28,8 @@
                     name: item.name, 
                     email: item.email,
                     role: roleName,
-                    kolektor_id: item.kolektor_id || ''
+                    kolektor_id: item.kolektor_id || '',
+                    teknisi_id: item.teknisi_id || ''
                 };
                 this.showModal = true;
             }
@@ -63,6 +64,9 @@
                                 Kolektor</th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-semibold text-content-tertiary uppercase tracking-wider">
+                                Teknisi</th>
+                            <th
+                                class="px-6 py-3 text-left text-xs font-semibold text-content-tertiary uppercase tracking-wider">
                                 Aksi</th>
                         </tr>
                     </thead>
@@ -81,6 +85,9 @@
                                 </td>
                                 <td class="px-6 py-4 text-sm text-content-secondary">
                                     {{ $user->kolektor?->nama_kolektor ?? '—' }}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-content-secondary">
+                                    {{ $user->teknisi?->nama_teknisi ?? '—' }}
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-2">
@@ -109,7 +116,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-10 text-center text-content-tertiary">Belum ada user.</td>
+                                <td colspan="6" class="px-6 py-10 text-center text-content-tertiary">Belum ada user.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -190,6 +197,15 @@
                                     <option value="">Tidak ada mapping</option>
                                     @foreach($kolektor as $k)
                                         <option value="{{ $k->id }}">{{ $k->nama_kolektor }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div x-show="formData.role === 'teknisi'">
+                                <label class="block text-content-secondary text-sm mb-2">Mapping Teknisi (Opsional)</label>
+                                <select name="teknisi_id" x-model="formData.teknisi_id" class="input-field">
+                                    <option value="">Tidak ada mapping</option>
+                                    @foreach($teknisi as $t)
+                                        <option value="{{ $t->id }}">{{ $t->nama_teknisi }}</option>
                                     @endforeach
                                 </select>
                             </div>

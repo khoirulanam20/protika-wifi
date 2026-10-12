@@ -4,11 +4,10 @@ namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
 use App\Models\MasterKolektor;
-use App\Models\User;
 use App\Support\AdminDesaScope;
+use App\Support\MasterAccount;
 use App\Support\WilayahFilter;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 
 class KolektorController extends Controller
@@ -59,7 +58,7 @@ class KolektorController extends Controller
             'kontak'        => 'nullable|string|max:50',
             'lokasi'        => 'nullable|string',
             'email'         => 'nullable|email|unique:users,email',
-            'password'      => 'nullable|string|min:6|confirmed',
+            'password'      => 'nullable|string|min:8|confirmed',
         ]);
 
         $data = $request->only([
@@ -73,15 +72,7 @@ class KolektorController extends Controller
         DB::transaction(function () use ($data, $request) {
             $kolektor = MasterKolektor::create($data);
 
-            if ($request->filled('email') && $request->filled('password')) {
-                $user = User::create([
-                    'name'        => $request->nama_kolektor,
-                    'email'       => $request->email,
-                    'password'    => Hash::make($request->password),
-                    'kolektor_id' => $kolektor->id,
-                ]);
-                $user->assignRole('kolektor');
-            }
+            MasterAccount::sync($kolektor, 'kolektor', 'kolektor_id', $request->nama_kolektor, $request->email, $request->password);
         });
 
         return redirect()->route('master.kolektor.index')->with('success', 'Kolektor berhasil ditambahkan.');
@@ -106,7 +97,7 @@ class KolektorController extends Controller
             'kontak'        => 'nullable|string|max:50',
             'lokasi'        => 'nullable|string',
             'email'         => 'nullable|email|unique:users,email,' . optional($kolektor->user)->id,
-            'password'      => 'nullable|string|min:6|confirmed',
+            'password'      => 'nullable|string|min:8|confirmed',
         ]);
 
         $data = $request->only([
@@ -120,28 +111,7 @@ class KolektorController extends Controller
         DB::transaction(function () use ($request, $kolektor, $data) {
             $kolektor->update($data);
 
-            if ($request->filled('email')) {
-                $user = $kolektor->user;
-
-                if ($user) {
-                    $updateData = [
-                        'name'  => $request->nama_kolektor,
-                        'email' => $request->email,
-                    ];
-                    if ($request->filled('password')) {
-                        $updateData['password'] = Hash::make($request->password);
-                    }
-                    $user->update($updateData);
-                } elseif ($request->filled('password')) {
-                    $user = User::create([
-                        'name'        => $request->nama_kolektor,
-                        'email'       => $request->email,
-                        'password'    => Hash::make($request->password),
-                        'kolektor_id' => $kolektor->id,
-                    ]);
-                    $user->assignRole('kolektor');
-                }
-            }
+            MasterAccount::sync($kolektor, 'kolektor', 'kolektor_id', $request->nama_kolektor, $request->email, $request->password);
         });
 
         return redirect()->route('master.kolektor.index')->with('success', 'Kolektor berhasil diperbarui.');
@@ -152,9 +122,7 @@ class KolektorController extends Controller
         AdminDesaScope::authorizeWilayahRecord($kolektor);
 
         DB::transaction(function () use ($kolektor) {
-            if ($kolektor->user) {
-                $kolektor->user->delete();
-            }
+            MasterAccount::delete($kolektor);
             $kolektor->delete();
         });
 

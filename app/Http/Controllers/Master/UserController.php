@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\MasterKolektor;
+use App\Models\MasterTeknisi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -13,10 +14,11 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::with('roles', 'kolektor')->latest()->paginate(20);
+        $users = User::with('roles', 'kolektor', 'teknisi')->latest()->paginate(20);
         $roles = Role::all();
         $kolektor = MasterKolektor::all();
-        return view('master.users.index', compact('users', 'roles', 'kolektor'));
+        $teknisi = MasterTeknisi::orderBy('nama_teknisi')->get();
+        return view('master.users.index', compact('users', 'roles', 'kolektor', 'teknisi'));
     }
 
     public function create()
@@ -34,13 +36,15 @@ class UserController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|exists:roles,name',
             'kolektor_id' => 'nullable|exists:master_kolektor,id',
+            'teknisi_id' => 'nullable|exists:master_teknisi,id',
         ]);
 
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'kolektor_id' => $data['kolektor_id'],
+            'kolektor_id' => $data['kolektor_id'] ?? null,
+            'teknisi_id' => $data['teknisi_id'] ?? null,
         ]);
 
         $user->assignRole($data['role']);
@@ -63,12 +67,14 @@ class UserController extends Controller
             'password' => 'nullable|string|min:8|confirmed',
             'role' => 'required|exists:roles,name',
             'kolektor_id' => 'nullable|exists:master_kolektor,id',
+            'teknisi_id' => 'nullable|exists:master_teknisi,id',
         ]);
 
         $user->update([
             'name' => $data['name'],
             'email' => $data['email'],
-            'kolektor_id' => $data['kolektor_id'],
+            'kolektor_id' => $data['kolektor_id'] ?? null,
+            'teknisi_id' => $data['teknisi_id'] ?? null,
         ]);
 
         if ($data['password']) {

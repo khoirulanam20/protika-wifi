@@ -4,11 +4,10 @@ namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
 use App\Models\MasterAdminDesa;
-use App\Models\User;
+use App\Support\MasterAccount;
 use App\Support\WilayahFilter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 class AdminDesaController extends Controller
 {
@@ -46,7 +45,7 @@ class AdminDesaController extends Controller
             'kontak'     => 'nullable|string|max:50',
             'lokasi'     => 'nullable|string',
             'email'      => 'nullable|email|unique:users,email',
-            'password'   => 'nullable|string|min:6|confirmed',
+            'password'   => 'nullable|string|min:8|confirmed',
         ]);
 
         DB::transaction(function () use ($request) {
@@ -60,15 +59,7 @@ class AdminDesaController extends Controller
                 'lokasi'     => $request->lokasi,
             ]);
 
-            if ($request->filled('email') && $request->filled('password')) {
-                $user = User::create([
-                    'name'          => $request->nama_admin,
-                    'email'         => $request->email,
-                    'password'      => Hash::make($request->password),
-                    'admin_desa_id' => $admin->id,
-                ]);
-                $user->assignRole('admin_desa');
-            }
+            MasterAccount::sync($admin, 'admin_desa', 'admin_desa_id', $request->nama_admin, $request->email, $request->password);
         });
 
         return redirect()->route('master.admin-desa.index')->with('success', 'Admin Desa berhasil ditambahkan.');
@@ -85,7 +76,7 @@ class AdminDesaController extends Controller
             'kontak'     => 'nullable|string|max:50',
             'lokasi'     => 'nullable|string',
             'email'      => 'nullable|email|unique:users,email,' . optional($adminDesa->user)->id,
-            'password'   => 'nullable|string|min:6|confirmed',
+            'password'   => 'nullable|string|min:8|confirmed',
         ]);
 
         DB::transaction(function () use ($request, $adminDesa) {
@@ -99,28 +90,7 @@ class AdminDesaController extends Controller
                 'lokasi'     => $request->lokasi,
             ]);
 
-            if ($request->filled('email')) {
-                $user = $adminDesa->user;
-
-                if ($user) {
-                    $updateData = [
-                        'name'  => $request->nama_admin,
-                        'email' => $request->email,
-                    ];
-                    if ($request->filled('password')) {
-                        $updateData['password'] = Hash::make($request->password);
-                    }
-                    $user->update($updateData);
-                } elseif ($request->filled('password')) {
-                    $user = User::create([
-                        'name'          => $request->nama_admin,
-                        'email'         => $request->email,
-                        'password'      => Hash::make($request->password),
-                        'admin_desa_id' => $adminDesa->id,
-                    ]);
-                    $user->assignRole('admin_desa');
-                }
-            }
+            MasterAccount::sync($adminDesa, 'admin_desa', 'admin_desa_id', $request->nama_admin, $request->email, $request->password);
         });
 
         return redirect()->route('master.admin-desa.index')->with('success', 'Admin Desa berhasil diperbarui.');
@@ -129,9 +99,7 @@ class AdminDesaController extends Controller
     public function destroy(MasterAdminDesa $adminDesa)
     {
         DB::transaction(function () use ($adminDesa) {
-            if ($adminDesa->user) {
-                $adminDesa->user->delete();
-            }
+            MasterAccount::delete($adminDesa);
             $adminDesa->delete();
         });
 

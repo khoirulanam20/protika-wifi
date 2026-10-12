@@ -207,7 +207,7 @@
                                             tidak diubah)</span>
                                     </label>
                                     <input type="password" name="password" class="input-field"
-                                        placeholder="Min. 6 karakter">
+                                        placeholder="Min. 8 karakter">
                                 </div>
                                 <div>
                                     <label class="block text-content-secondary text-sm mb-2">Konfirmasi Password</label>

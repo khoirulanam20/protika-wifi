@@ -24,6 +24,7 @@ class User extends Authenticatable
         'password',
         'kolektor_id',
         'admin_desa_id',
+        'teknisi_id',
     ];
 
     /**
@@ -52,6 +53,11 @@ class User extends Authenticatable
     public function kolektor()
     {
         return $this->belongsTo(MasterKolektor::class, 'kolektor_id');
+    }
+
+    public function teknisi()
+    {
+        return $this->belongsTo(MasterTeknisi::class, 'teknisi_id');
     }
 
     public function adminDesa()

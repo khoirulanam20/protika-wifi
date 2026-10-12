@@ -12,6 +12,7 @@ use App\Http\Controllers\Master\UserController;
 use App\Http\Controllers\Tagihan\TagihanController;
 use App\Http\Controllers\Tagihan\RekapController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PerbaikanController;
 use App\Http\Controllers\Api\WilayahController;
 
 Route::get('/', fn() => redirect()->route('login'));
@@ -77,6 +78,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/tagihan/{tagihan}/invoice/pdf', [TagihanController::class, 'downloadInvoicePdf'])->name('tagihan.invoice.pdf');
         Route::get('/tagihan/{tagihan}/invoice', [TagihanController::class, 'invoice'])->name('tagihan.invoice');
         Route::resource('tagihan',      TagihanController::class);
+    });
+
+    Route::middleware(['role:superadmin|teknisi'])->group(function () {
+        Route::resource('perbaikan', PerbaikanController::class)->parameters(['perbaikan' => 'perbaikan']);
     });
 
     // Notification Routes

@@ -9,6 +9,11 @@ class MasterTeknisi extends Model
     protected $table = 'master_teknisi';
     protected $fillable = ['nama_teknisi', 'alamat', 'kecamatan', 'desa', 'kontak', 'lokasi'];
 
+    public function user()
+    {
+        return $this->hasOne(User::class, 'teknisi_id');
+    }
+
     public function pelanggan()
     {
         return $this->hasMany(MasterPelanggan::class, 'teknisi_id');

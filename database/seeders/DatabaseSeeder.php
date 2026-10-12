@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'kolektor', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'admin_desa', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'teknisi', 'guard_name' => 'web']);
 
         $admin = User::firstOrCreate(
             ['email' => 'admin@protika.id'],

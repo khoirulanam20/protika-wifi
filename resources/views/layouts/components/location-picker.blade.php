@@ -109,6 +109,24 @@
                         this.map.setView([this.defaultLat, this.defaultLng], 13);
                     },
 
+                    isLocating: false,
+                    useMyLocation() {
+                        if (!navigator.geolocation) {
+                            alert('Browser tidak mendukung GPS.');
+                            return;
+                        }
+                        this.isLocating = true;
+                        navigator.geolocation.getCurrentPosition((pos) => {
+                            this.lokasi = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
+                            this.updateMarkerFromForm();
+                            if (this.map) this.map.setView([pos.coords.latitude, pos.coords.longitude], 17);
+                            this.isLocating = false;
+                        }, () => {
+                            alert('Gagal mengambil lokasi. Izinkan akses lokasi di browser.');
+                            this.isLocating = false;
+                        }, { enableHighAccuracy: true, timeout: 15000 });
+                    },
+
                     async searchLocation() {
                         if (!this.searchQuery.trim()) return;
                         this.isSearching = true;
@@ -174,6 +192,11 @@
         </div>
     </div>
 
+    @if(!empty($gps))
+    <button type="button" @click="useMyLocation()" class="btn-primary mb-2 w-full sm:w-auto" :disabled="isLocating">
+        <span x-text="isLocating ? 'Mengambil lokasi...' : 'Pakai lokasi saya (GPS)'"></span>
+    </button>
+    @endif
     <div class="flex gap-2 mb-2">
         <input type="text" name="lokasi" x-model="lokasi" class="input-field bg-base-page" placeholder="Klik pada peta atau geser marker" @change="updateMarkerFromForm()" readonly>
         <button type="button" @click="lokasi = ''; updateMarkerFromForm()" class="btn-secondary px-3 py-2 flex-shrink-0" title="Reset Lokasi">
