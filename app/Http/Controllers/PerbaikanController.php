@@ -27,6 +27,7 @@ class PerbaikanController extends Controller
             'lokasi'            => ['required', 'string', 'max:100', 'regex:/^-?\d{1,3}(\.\d+)?,\s*-?\d{1,3}(\.\d+)?$/'],
             'alamat'            => 'nullable|string|max:255',
             'deskripsi'         => 'required|string|max:2000',
+            'peralatan'         => 'nullable|string|max:2000',
             'pelanggan_id'      => 'nullable|exists:master_pelanggan,id',
             'foto'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ];

@@ -24,6 +24,7 @@
         <dt class="text-content-tertiary">Alamat</dt><dd class="text-content-primary">{{ $perbaikan->alamat ?: '—' }}</dd>
         <dt class="text-content-tertiary">Koordinat</dt><dd><a href="{{ $perbaikan->maps_url }}" target="_blank" rel="noopener" class="text-primary">{{ $perbaikan->lokasi }} ↗</a></dd>
         <dt class="text-content-tertiary">Deskripsi</dt><dd class="text-content-primary whitespace-pre-line">{{ $perbaikan->deskripsi }}</dd>
+        <dt class="text-content-tertiary">Peralatan</dt><dd class="text-content-primary whitespace-pre-line">{{ $perbaikan->peralatan ?: '—' }}</dd>
     </dl>
     <a href="{{ route('perbaikan.index') }}" class="btn-secondary inline-block">Kembali</a>
 </div>

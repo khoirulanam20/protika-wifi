@@ -66,6 +66,12 @@
         @error('deskripsi')<p class="text-status-danger text-xs mt-1">{{ $message }}</p>@enderror
     </div>
 
+    <div>
+        <label class="block text-content-secondary text-sm mb-2">Peralatan</label>
+        <textarea name="peralatan" rows="3" class="input-field" placeholder="Alat/bahan yang dipakai (opsional)">{{ old('peralatan', $p?->peralatan) }}</textarea>
+        @error('peralatan')<p class="text-status-danger text-xs mt-1">{{ $message }}</p>@enderror
+    </div>
+
     <div x-data="{ preview: '{{ $p?->foto_url }}' }">
         <label class="block text-content-secondary text-sm mb-2">Foto Bukti (jpg/png/webp, maks 5MB)</label>
         <input type="file" name="foto" accept="image/*" capture="environment" class="input-field"

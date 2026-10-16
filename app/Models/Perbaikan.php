@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Perbaikan extends Model
 {
     protected $table = 'perbaikan';
-    protected $fillable = ['user_id', 'pelanggan_id', 'tanggal_perbaikan', 'lokasi', 'alamat', 'deskripsi', 'foto'];
+    protected $fillable = ['user_id', 'pelanggan_id', 'tanggal_perbaikan', 'lokasi', 'alamat', 'deskripsi', 'peralatan', 'foto'];
     protected $casts = ['tanggal_perbaikan' => 'datetime'];
 
     public function user()
