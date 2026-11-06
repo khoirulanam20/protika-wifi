@@ -45,6 +45,10 @@ class PerbaikanController extends Controller
             $query->where('user_id', $request->user_id);
         }
 
+        if ($this->isSuperadmin() && in_array($request->bayar, ['1', '0'], true)) {
+            $request->bayar === '1' ? $query->whereNotNull('dibayar_at') : $query->whereNull('dibayar_at');
+        }
+
         if ($request->filled('dari')) {
             $query->whereDate('tanggal_perbaikan', '>=', $request->dari);
         }
@@ -84,6 +88,7 @@ class PerbaikanController extends Controller
         $data['user_id'] = auth()->id();
         $data['lokasi'] = preg_replace('/\s+/', '', $data['lokasi']);
         unset($data['foto']);
+        $data['alamat'] = $data['alamat'] ?: Perbaikan::alamatDariLokasi($data['lokasi']);
 
         if ($request->hasFile('foto')) {
             $data['foto'] = $request->file('foto')->store('perbaikan', 'public');
@@ -116,6 +121,7 @@ class PerbaikanController extends Controller
         $data = $request->validate($this->rules());
         $data['lokasi'] = preg_replace('/\s+/', '', $data['lokasi']);
         unset($data['foto']);
+        $data['alamat'] = $data['alamat'] ?: Perbaikan::alamatDariLokasi($data['lokasi']);
 
         if ($request->hasFile('foto')) {
             if ($perbaikan->foto) {
@@ -127,6 +133,14 @@ class PerbaikanController extends Controller
         $perbaikan->update($data);
 
         return redirect()->route('perbaikan.index')->with('success', 'Laporan perbaikan berhasil diperbarui');
+    }
+
+    public function bayar(Perbaikan $perbaikan)
+    {
+        abort_unless($this->isSuperadmin(), 403);
+        $perbaikan->update(['dibayar_at' => $perbaikan->dibayar_at ? null : now()]);
+
+        return back()->with('success', $perbaikan->dibayar_at ? 'Ditandai sudah dibayar' : 'Status bayar dibatalkan');
     }
 
     public function destroy(Perbaikan $perbaikan)

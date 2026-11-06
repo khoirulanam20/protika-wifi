@@ -57,9 +57,16 @@
                     @endforeach
                 </select>
             @endif
+            @if(auth()->user()->hasRole('superadmin'))
+                <select name="bayar" class="input-field pb-full">
+                    <option value="">Semua Status Bayar</option>
+                    <option value="1" @selected(request('bayar') === '1')>Sudah dibayar</option>
+                    <option value="0" @selected(request('bayar') === '0')>Belum dibayar</option>
+                </select>
+            @endif
             <input type="date" name="dari" value="{{ request('dari') }}" class="input-field" aria-label="Dari tanggal">
             <input type="date" name="sampai" value="{{ request('sampai') }}" class="input-field" aria-label="Sampai tanggal">
-            @php($filtered = request()->hasAny(['user_id', 'dari', 'sampai']))
+            @php($filtered = request()->hasAny(['user_id', 'bayar', 'dari', 'sampai']))
             <button class="btn-secondary {{ $filtered ? '' : 'pb-full' }}">Filter</button>
             @if($filtered)
                 <a href="{{ route('perbaikan.index') }}" class="btn-secondary">Reset</a>
@@ -96,6 +103,7 @@
                         <td class="px-6 py-4 text-sm text-content-secondary" style="max-width:20rem">
                             @if($item->pelanggan)<span class="font-medium text-content-primary">{{ $item->pelanggan->nama_pelanggan }}</span><br>@endif
                             {{ \Illuminate\Support\Str::limit($item->deskripsi, 80) }}
+                            <br>@if($item->dibayar_at)<span class="text-xs font-semibold text-status-success">✓ Jasa dibayar</span>@endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                             <a href="{{ route('perbaikan.show', $item) }}" class="text-primary">Detail</a>
@@ -106,6 +114,13 @@
                                     · <button class="text-status-danger">Hapus</button>
                                 </form>
                             @endif
+                            @if(auth()->user()->hasRole('superadmin'))
+                                <form method="POST" action="{{ route('perbaikan.bayar', $item) }}" style="display:inline">
+                                    @csrf @method('PATCH')
+                                    · <button class="text-primary">{{ $item->dibayar_at ? 'Batal Bayar' : 'Tandai Dibayar' }}</button>
+                                </form>
+                                @endif
+
                         </td>
                     </tr>
                 @empty
@@ -126,7 +141,9 @@
                     <p class="text-sm font-semibold text-content-primary">{{ $item->tanggal_perbaikan->format('d M Y H:i') }}</p>
                     <p class="text-xs text-content-secondary">{{ $item->user->petugasNama() }}@if($item->pelanggan) · {{ $item->pelanggan->nama_pelanggan }}@endif</p>
                     <p class="text-sm text-content-secondary">{{ \Illuminate\Support\Str::limit($item->deskripsi, 80) }}</p>
-                    <a href="{{ $item->maps_url }}" target="_blank" rel="noopener" class="text-primary text-xs">{{ $item->alamat ?: $item->lokasi }} ↗</a>
+                    @if($item->alamat)<p class="text-xs text-content-secondary">{{ $item->alamat }}</p>@endif
+                    <a href="{{ $item->maps_url }}" target="_blank" rel="noopener" class="text-primary text-xs">{{ $item->lokasi }} ↗</a>
+                    @if($item->dibayar_at)<span class="text-xs font-semibold text-status-success">✓ Jasa dibayar</span>@endif
                     <div class="pb-card-actions">
                         <a href="{{ route('perbaikan.show', $item) }}" class="text-primary">Detail</a>
                         @if($canEdit($item))
@@ -136,6 +153,13 @@
                                 <button class="text-status-danger">Hapus</button>
                             </form>
                         @endif
+                        @if(auth()->user()->hasRole('superadmin'))
+                                <form method="POST" action="{{ route('perbaikan.bayar', $item) }}" style="display:inline">
+                                    @csrf @method('PATCH')
+                                    <button class="text-primary">{{ $item->dibayar_at ? 'Batal Bayar' : 'Tandai Dibayar' }}</button>
+                                </form>
+                                @endif
+
                     </div>
                 </div>
             </div>

@@ -19,7 +19,7 @@ class PerbaikanExport implements FromCollection, WithHeadings, WithMapping, Shou
 
     public function headings(): array
     {
-        return ['No', 'Tanggal', 'Petugas', 'Pelanggan', 'Alamat', 'Koordinat', 'Link Maps', 'Deskripsi', 'Peralatan'];
+        return ['No', 'Tanggal', 'Petugas', 'Pelanggan', 'Alamat', 'Koordinat', 'Link Maps', 'Deskripsi', 'Peralatan', 'Jasa Dibayar'];
     }
 
     public function map($p): array
@@ -36,6 +36,7 @@ class PerbaikanExport implements FromCollection, WithHeadings, WithMapping, Shou
             $p->maps_url,
             $p->deskripsi,
             $p->peralatan ?: '-',
+            $p->dibayar_at ? 'Sudah (' . $p->dibayar_at->format('d-m-Y') . ')' : 'Belum',
         ];
     }
 }

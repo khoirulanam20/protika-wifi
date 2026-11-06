@@ -82,6 +82,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware(['role:superadmin|teknisi|penagih|kolektor'])->group(function () {
         Route::get('perbaikan/export', [PerbaikanController::class, 'export'])->name('perbaikan.export');
+        Route::patch('perbaikan/{perbaikan}/bayar', [PerbaikanController::class, 'bayar'])->name('perbaikan.bayar');
         Route::resource('perbaikan', PerbaikanController::class)->parameters(['perbaikan' => 'perbaikan']);
     });
 
