@@ -10,6 +10,7 @@ use App\Support\WilayahFilter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class TeknisiController extends Controller
 {
@@ -47,7 +48,7 @@ class TeknisiController extends Controller
             'kontak' => 'nullable|string|max:50',
             'lokasi' => 'nullable|string',
             'email' => 'nullable|email|unique:users,email',
-            'password' => 'nullable|string|min:8|confirmed',
+            'password' => 'required_with:email|string|min:8|confirmed',
         ]);
 
         $account = Arr::only($data, ['email', 'password']);
@@ -84,7 +85,7 @@ class TeknisiController extends Controller
             'kontak' => 'nullable|string|max:50',
             'lokasi' => 'nullable|string',
             'email' => 'nullable|email|unique:users,email,' . optional($teknisi->user)->id,
-            'password' => 'nullable|string|min:8|confirmed',
+            'password' => [Rule::requiredIf(filled($request->email) && ! $teknisi->user), 'nullable', 'string', 'min:8', 'confirmed'],
         ]);
 
         $account = Arr::only($data, ['email', 'password']);

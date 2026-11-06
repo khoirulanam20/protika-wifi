@@ -17,10 +17,13 @@
                     isSearching: false,
                     searchResults: [],
                     showDropdown: false,
+                    address: '',
+                    geoSeq: 0,
                     defaultLat: -7.3195, // Tengah Jawa Tengah / Temanggung default
                     defaultLng: 110.1770,
 
                     initMap() {
+                        this.$watch('lokasi', () => this.reverseGeocode());
                         // Jika berada di dalam modal yang menggunakan formData
                         if (typeof this.formData !== 'undefined') {
                             this.$watch('formData.lokasi', (val) => {
@@ -107,6 +110,25 @@
                         // Default if empty
                         this.marker.setLatLng([this.defaultLat, this.defaultLng]);
                         this.map.setView([this.defaultLat, this.defaultLng], 13);
+                    },
+
+                    // Alamat dari koordinat (Nominatim). Mengisi kolom alamat hanya jika masih kosong.
+                    async reverseGeocode() {
+                        const m = (this.lokasi || '').match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+                        const seq = ++this.geoSeq;
+                        if (!m) { this.address = ''; return; }
+                        let addr = '';
+                        try {
+                            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=id&lat=${m[1]}&lon=${m[2]}`);
+                            addr = (await res.json()).display_name || '';
+                        } catch (e) { console.error(e); }
+                        if (seq !== this.geoSeq) return;
+                        this.address = addr;
+                        if (!addr) return;
+                        if (typeof this.formData !== 'undefined' && 'alamat' in this.formData && !this.formData.alamat) {
+                            this.formData.alamat = addr;
+                        }
+                        window.dispatchEvent(new CustomEvent('lokasi-alamat', { detail: addr }));
                     },
 
                     isLocating: false,
@@ -203,5 +225,6 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
     </div>
+    <p x-show="address" x-text="address" class="text-xs text-content-secondary mb-2" style="display:none"></p>
     <div x-ref="mapContainer" class="w-full rounded-lg border border-border" style="height: 350px; min-height: 350px;"></div>
 </div>

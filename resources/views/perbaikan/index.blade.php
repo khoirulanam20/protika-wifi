@@ -46,6 +46,8 @@
             Tambah
         </a>
 
+        <a href="{{ route('perbaikan.export', request()->query()) }}" class="btn-secondary pb-add" style="order:-1">Export Excel</a>
+
         <form method="GET" class="pb-filter">
             @if($teknisiUsers->isNotEmpty())
                 <select name="user_id" class="input-field pb-full">

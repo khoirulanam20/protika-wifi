@@ -94,7 +94,7 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-2">
-                                        <button @click="openEdit({{ $item->toJson() }}, '{{ optional($item->user)->email }}')"
+                                        <button @click="openEdit(@js($item->only(['id','nama_teknisi','alamat','kecamatan','desa','kontak','lokasi'])), @js($item->user?->email))"
                                             class="p-1.5 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-colors"
                                             title="Edit">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

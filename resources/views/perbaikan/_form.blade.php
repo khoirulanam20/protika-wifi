@@ -54,9 +54,9 @@
     @include('layouts.components.location-picker', ['lokasiValue' => old('lokasi', $p?->lokasi ?? ''), 'gps' => true])
     @error('lokasi')<p class="text-status-danger text-xs -mt-3">{{ $message }}</p>@enderror
 
-    <div>
+    <div x-data @lokasi-alamat.window="const i = $refs.alamat; if (!i.value) i.value = $event.detail.slice(0, 255)">
         <label class="block text-content-secondary text-sm mb-2">Alamat / Patokan Lokasi</label>
-        <input type="text" name="alamat" class="input-field" maxlength="255" value="{{ old('alamat', $p?->alamat) }}" placeholder="Contoh: RT 02/RW 01, depan masjid">
+        <input type="text" name="alamat" x-ref="alamat" class="input-field" maxlength="255" value="{{ old('alamat', $p?->alamat) }}" placeholder="Contoh: RT 02/RW 01, depan masjid">
         @error('alamat')<p class="text-status-danger text-xs mt-1">{{ $message }}</p>@enderror
     </div>
 

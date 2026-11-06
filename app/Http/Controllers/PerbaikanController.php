@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\PerbaikanExport;
 use App\Models\MasterPelanggan;
 use App\Models\Perbaikan;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PerbaikanController extends Controller
 {
@@ -33,7 +35,7 @@ class PerbaikanController extends Controller
         ];
     }
 
-    public function index(Request $request)
+    private function filteredQuery(Request $request)
     {
         $query = Perbaikan::with('user.teknisi', 'user.penagih', 'pelanggan');
 
@@ -50,7 +52,20 @@ class PerbaikanController extends Controller
             $query->whereDate('tanggal_perbaikan', '<=', $request->sampai);
         }
 
-        $perbaikan = $query->orderByDesc('tanggal_perbaikan')->paginate(20)->withQueryString();
+        return $query->orderByDesc('tanggal_perbaikan');
+    }
+
+    public function export(Request $request)
+    {
+        return Excel::download(
+            new PerbaikanExport($this->filteredQuery($request)->get()),
+            'laporan-perbaikan-' . now()->format('Ymd-His') . '.xlsx'
+        );
+    }
+
+    public function index(Request $request)
+    {
+        $perbaikan = $this->filteredQuery($request)->paginate(20)->withQueryString();
         $teknisiUsers = $this->isSuperadmin()
             ? User::role(['teknisi', 'penagih'])->orderBy('name')->get(['id', 'name'])
             : collect();

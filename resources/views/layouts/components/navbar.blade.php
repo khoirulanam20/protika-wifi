@@ -53,6 +53,13 @@
                     </div>
                 </div>
                 @endhasanyrole
+
+                @hasanyrole('superadmin|teknisi|penagih|kolektor')
+                <a href="{{ route('perbaikan.index') }}"
+                    class="{{ request()->routeIs('perbaikan.*') ? 'nav-active' : 'nav-item' }}">
+                    Perbaikan
+                </a>
+                @endhasanyrole
             </nav>
         </div>
 

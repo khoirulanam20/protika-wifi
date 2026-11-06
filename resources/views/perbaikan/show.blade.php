@@ -22,7 +22,8 @@
     <dl class="pb-dl">
         <dt class="text-content-tertiary">Pelanggan</dt><dd class="text-content-primary">{{ $perbaikan->pelanggan?->nama_pelanggan ?? '—' }}</dd>
         <dt class="text-content-tertiary">Alamat</dt><dd class="text-content-primary">{{ $perbaikan->alamat ?: '—' }}</dd>
-        <dt class="text-content-tertiary">Koordinat</dt><dd><a href="{{ $perbaikan->maps_url }}" target="_blank" rel="noopener" class="text-primary">{{ $perbaikan->lokasi }} ↗</a></dd>
+        <dt class="text-content-tertiary">Koordinat</dt><dd><a href="{{ $perbaikan->maps_url }}" target="_blank" rel="noopener" class="text-primary">{{ $perbaikan->lokasi }} ↗</a>
+            <div class="text-xs text-content-secondary" x-data="{ a: '' }" x-init="fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=id&lat={{ explode(',', $perbaikan->lokasi)[0] }}&lon={{ explode(',', $perbaikan->lokasi)[1] ?? '' }}').then(r => r.json()).then(d => a = d.display_name || '').catch(() => {})" x-text="a"></div></dd>
         <dt class="text-content-tertiary">Deskripsi</dt><dd class="text-content-primary whitespace-pre-line">{{ $perbaikan->deskripsi }}</dd>
         <dt class="text-content-tertiary">Peralatan</dt><dd class="text-content-primary whitespace-pre-line">{{ $perbaikan->peralatan ?: '—' }}</dd>
     </dl>
