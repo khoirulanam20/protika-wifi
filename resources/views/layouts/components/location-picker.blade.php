@@ -119,8 +119,8 @@
                         if (!m) { this.address = ''; return; }
                         let addr = '';
                         try {
-                            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=id&lat=${m[1]}&lon=${m[2]}`);
-                            addr = (await res.json()).display_name || '';
+                            const res = await fetch(`{{ route('api.alamat') }}?lokasi=${m[1]},${m[2]}`, { headers: { Accept: 'application/json' } });
+                            addr = (await res.json()).alamat || '';
                         } catch (e) { console.error(e); }
                         if (seq !== this.geoSeq) return;
                         this.address = addr;

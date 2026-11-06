@@ -37,6 +37,10 @@ Route::prefix('api/wilayah')->middleware(['auth'])->group(function () {
 require __DIR__ . '/auth.php';
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/api/alamat', fn (Illuminate\Http\Request $r) => response()->json([
+        'alamat' => preg_match('/^-?\d{1,3}(\.\d+)?,\s*-?\d{1,3}(\.\d+)?$/', (string) $r->lokasi) ? App\Models\Perbaikan::alamatDariLokasi($r->lokasi) : null,
+    ]))->name('api.alamat');
+
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->middleware(['role:superadmin|kolektor|admin_desa'])
         ->name('dashboard');

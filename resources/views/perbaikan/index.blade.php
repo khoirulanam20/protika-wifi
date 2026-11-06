@@ -39,7 +39,11 @@
 
 @section('content')
 @php($canEdit = fn ($item) => auth()->user()->hasRole('superadmin') || $item->user_id === auth()->id())
-<div class="card overflow-hidden">
+<div class="card overflow-hidden" x-data="{ img: null }">
+    <div x-show="img" x-transition.opacity style="display:none" @click="img = null" @keydown.escape.window="img = null"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
+        <img :src="img" alt="Foto" class="rounded-lg" style="max-width:100%;max-height:90vh">
+    </div>
     <div class="pb-toolbar">
         <a href="{{ route('perbaikan.create') }}" class="btn-primary pb-add">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -89,7 +93,7 @@
                     <tr class="hover:bg-base-page transition-colors">
                         <td class="px-6 py-4">
                             @if($item->foto_url)
-                                <a href="{{ $item->foto_url }}" target="_blank"><img src="{{ $item->foto_url }}" style="width:4rem;height:4rem;object-fit:cover;border-radius:.5rem" alt="Foto"></a>
+                                <a href="{{ $item->foto_url }}" @click.prevent="img = '{{ $item->foto_url }}'"><img src="{{ $item->foto_url }}" style="width:4rem;height:4rem;object-fit:cover;border-radius:.5rem" alt="Foto"></a>
                             @else
                                 <span class="text-content-tertiary text-sm">—</span>
                             @endif
@@ -135,7 +139,7 @@
         @forelse($perbaikan as $item)
             <div class="pb-card">
                 @if($item->foto_url)
-                    <a href="{{ $item->foto_url }}" target="_blank"><img src="{{ $item->foto_url }}" alt="Foto"></a>
+                    <a href="{{ $item->foto_url }}" @click.prevent="img = '{{ $item->foto_url }}'"><img src="{{ $item->foto_url }}" alt="Foto"></a>
                 @endif
                 <div class="pb-card-body">
                     <p class="text-sm font-semibold text-content-primary">{{ $item->tanggal_perbaikan->format('d M Y H:i') }}</p>

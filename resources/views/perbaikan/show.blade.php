@@ -15,15 +15,20 @@
 @endpush
 
 @section('content')
-<div class="card p-4 sm:p-6 max-w-3xl space-y-4">
+<div class="card p-4 sm:p-6 max-w-3xl space-y-4" x-data="{ img: null }">
+    <div x-show="img" x-transition.opacity style="display:none" @click="img = null" @keydown.escape.window="img = null"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
+        <img :src="img" alt="Foto" class="rounded-lg" style="max-width:100%;max-height:90vh">
+    </div>
+
     @if($perbaikan->foto_url)
-        <img src="{{ $perbaikan->foto_url }}" class="pb-photo rounded-lg border border-border" alt="Foto perbaikan">
+        <img src="{{ $perbaikan->foto_url }}" @click="img = $el.src" class="pb-photo rounded-lg border border-border cursor-zoom-in" alt="Foto perbaikan">
     @endif
     <dl class="pb-dl">
         <dt class="text-content-tertiary">Pelanggan</dt><dd class="text-content-primary">{{ $perbaikan->pelanggan?->nama_pelanggan ?? '—' }}</dd>
         <dt class="text-content-tertiary">Alamat</dt><dd class="text-content-primary">{{ $perbaikan->alamat ?: '—' }}</dd>
         <dt class="text-content-tertiary">Koordinat</dt><dd><a href="{{ $perbaikan->maps_url }}" target="_blank" rel="noopener" class="text-primary">{{ $perbaikan->lokasi }} ↗</a>
-            <div class="text-xs text-content-secondary" x-data="{ a: '' }" x-init="fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=id&lat={{ explode(',', $perbaikan->lokasi)[0] }}&lon={{ explode(',', $perbaikan->lokasi)[1] ?? '' }}').then(r => r.json()).then(d => a = d.display_name || '').catch(() => {})" x-text="a"></div></dd>
+            <div class="text-xs text-content-secondary" x-data="{ a: '' }" x-init="fetch(@js(route('api.alamat', ['lokasi' => $perbaikan->lokasi])), { headers: { Accept: 'application/json' } }).then(r => r.json()).then(d => a = d.alamat || '').catch(() => {})" x-text="a"></div></dd>
         <dt class="text-content-tertiary">Deskripsi</dt><dd class="text-content-primary whitespace-pre-line">{{ $perbaikan->deskripsi }}</dd>
         <dt class="text-content-tertiary">Peralatan</dt><dd class="text-content-primary whitespace-pre-line">{{ $perbaikan->peralatan ?: '—' }}</dd>
     </dl>
