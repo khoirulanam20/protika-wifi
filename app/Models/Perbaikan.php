@@ -41,13 +41,38 @@ class Perbaikan extends Model
             }
 
             $a = $res->json('address') ?? [];
-            // shortcut: key Nominatim untuk wilayah Indonesia bervariasi; urutan fallback ini hasil tebakan, sesuaikan jika ada daerah yang salah.
-            $parts = array_filter([
-                $a['hamlet'] ?? $a['neighbourhood'] ?? $a['quarter'] ?? null,
-                $a['village'] ?? $a['suburb'] ?? null,
-                $a['municipality'] ?? $a['city_district'] ?? $a['district'] ?? $a['subdistrict'] ?? null,
-                $a['county'] ?? $a['city'] ?? $a['regency'] ?? null,
-            ]);
+            $dusun = $a['hamlet'] ?? $a['neighbourhood'] ?? $a['quarter'] ?? null;
+            $desa = $a['village'] ?? $a['suburb'] ?? null;
+            $kec = $a['municipality'] ?? $a['city_district'] ?? $a['district'] ?? $a['subdistrict'] ?? null;
+            $kab = $a['county'] ?? $a['city'] ?? $a['regency'] ?? null;
+
+            // OSM sering tidak punya tag kecamatan di zoom detail; zoom 12 mengembalikan batas kecamatan.
+            if (! $kec) {
+                usleep(1100000); // batas Nominatim: 1 request/detik
+                try {
+                    $z = Http::timeout(5)->withUserAgent(config('app.name') . ' perbaikan')
+                        ->get('https://nominatim.openstreetmap.org/reverse', [
+                            'format' => 'jsonv2', 'accept-language' => 'id', 'addressdetails' => 1, 'zoom' => 12,
+                            'lat' => $lat, 'lon' => $lng,
+                        ])->json('address') ?? [];
+                    $kec = $z['town'] ?? $z['municipality'] ?? $z['city_district'] ?? $z['district'] ?? $z['subdistrict'] ?? null;
+                } catch (\Throwable) {
+                }
+            }
+
+            // Cadangan: cari dari tabel wilayah lewat desa di dalam kabupaten.
+            if (! $kec && $desa && $kab) {
+                $prov = Wilayah::whereRaw('LENGTH(kode) = 2')->where('nama', $a['state'] ?? '')->value('kode');
+                $kabKode = Wilayah::whereRaw('LENGTH(kode) = 5')->whereIn('nama', ["Kabupaten $kab", "Kota $kab", $kab])
+                    ->when($prov, fn ($q) => $q->where('kode', 'like', "$prov.%"))->value('kode');
+                $kodeDesa = $kabKode ? Wilayah::whereRaw('LENGTH(kode) = 13')->where('kode', 'like', "$kabKode.%")->where('nama', $desa)->pluck('kode') : collect();
+                // desa bernama sama di beberapa kecamatan = ambigu, kecamatan dikosongkan
+                if ($kodeDesa->count() === 1) {
+                    $kec = Wilayah::where('kode', substr($kodeDesa[0], 0, 8))->value('nama');
+                }
+            }
+
+            $parts = array_filter([$dusun, $desa, $kec, $kab]);
 
             return $parts ? implode(', ', array_unique($parts)) : null;
         });
